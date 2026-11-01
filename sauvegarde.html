@@ -1,0 +1,56 @@
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget — Sauvegarde</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+
+<header class="entete">
+  <h1><a class="retour" href="plus.html" aria-label="Retour">‹</a>Sauvegarde</h1>
+  <span class="statut-hors-ligne"></span>
+</header>
+
+<div class="page">
+  <div class="carte">
+    <h3 style="margin-top:0">Tes données</h3>
+    <p id="resume-donnees" class="vide" style="text-align:left; padding:0"></p>
+    <p style="font-size:0.85rem; color:var(--texte-att)">
+      Tes dépenses restent uniquement dans ce téléphone : rien n’est envoyé sur
+      internet. Si tu perds ou changes de téléphone, seul un fichier de
+      sauvegarde permet de les récupérer. Range-le dans iCloud Drive ou OneDrive.
+    </p>
+  </div>
+
+  <div class="carte">
+    <h3 style="margin-top:0">Sauvegarder</h3>
+    <p id="derniere-sauvegarde" style="font-size:0.9rem"></p>
+    <button class="bouton-principal" id="bouton-exporter">Créer un fichier de sauvegarde</button>
+  </div>
+
+  <div class="carte">
+    <h3 style="margin-top:0">Exporter pour Excel</h3>
+    <p style="font-size:0.85rem; color:var(--texte-att)">
+      Tous tes mouvements (dépenses et revenus) dans un fichier CSV qui s’ouvre
+      directement avec Excel. Ce fichier ne sert pas à restaurer l’app.
+    </p>
+    <button class="bouton-secondaire" id="bouton-csv" style="margin-top:0">Exporter mes mouvements (CSV)</button>
+  </div>
+
+  <div class="carte">
+    <h3 style="margin-top:0">Restaurer</h3>
+    <p style="font-size:0.85rem; color:var(--texte-att)">
+      Remplace toutes les données de ce téléphone par celles d’un fichier de sauvegarde.
+    </p>
+    <input type="file" id="champ-fichier" style="display:none">
+    <button class="bouton-secondaire" id="bouton-importer" style="margin-top:0">Choisir un fichier…</button>
+  </div>
+</div>
+
+<script src="js/format.js"></script>
+<script src="js/db.js"></script>
+<script src="js/local.js"></script>
+<script src="js/donnees.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/sauvegarde.js"></script>

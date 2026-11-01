@@ -1,0 +1,92 @@
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget — Accueil</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+
+<header class="entete-tableau">
+  <div class="marque"><span class="logo" aria-hidden="true">F</span><h1>Mes finances</h1></div>
+  <span class="statut-hors-ligne"></span>
+  <div class="nav-mois" role="group" aria-label="Mois affiché">
+    <button id="mois-prec" type="button" aria-label="Mois précédent">‹</button>
+    <span class="libelle-mois" id="libelle-mois"></span>
+    <button id="mois-suiv" type="button" aria-label="Mois suivant">›</button>
+  </div>
+  <button class="puce-option" id="mois-actuel" type="button" hidden>Revenir à ce mois-ci</button>
+</header>
+
+<div class="page page-tableau">
+  <main class="tableau">
+    <aside class="col-gauche" aria-label="Ajouter un mouvement">
+      <section class="carte">
+        <div class="entete-carte"><h2>Ajouter un mouvement</h2></div>
+        <div id="zone-saisie"></div>
+      </section>
+    </aside>
+
+    <section class="col-centre" aria-label="Tableau de bord">
+      <div class="chiffres-cles">
+        <div class="chiffre-cle">
+          <div class="libelle"><i style="background:var(--vert)"></i>Revenus du mois</div>
+          <div class="valeur" id="k-revenus">0 F</div>
+          <div class="sous" id="k-revenus-sous"></div>
+        </div>
+        <div class="chiffre-cle">
+          <div class="libelle"><i style="background:var(--rouge)"></i>Dépenses du mois</div>
+          <div class="valeur" id="k-depenses">0 F</div>
+          <div class="sous" id="k-depenses-sous"></div>
+        </div>
+        <div class="chiffre-cle heros" id="k-heros">
+          <div class="libelle">Il te reste</div>
+          <div class="valeur" id="k-reste">0 F</div>
+          <div class="sous" id="k-reste-sous"></div>
+        </div>
+      </div>
+
+      <section class="carte carte-anneau" aria-labelledby="t-anneau">
+        <div class="entete-carte"><div><h2 id="t-anneau">Dépenses par catégorie</h2><div class="sous" id="anneau-sous"></div></div></div>
+        <div class="anneau-et-legende">
+          <div class="anneau">
+            <svg id="anneau-svg" viewBox="0 0 200 200" role="img"></svg>
+            <div class="anneau-centre"><div class="total" id="anneau-total"></div><div class="lbl">dépensé</div></div>
+          </div>
+          <div class="legende" id="legende"></div>
+        </div>
+      </section>
+
+      <section class="carte" aria-labelledby="t-barres">
+        <div class="entete-carte"><div><h2 id="t-barres">Dépenses des 6 derniers mois</h2><div class="sous">Touche un mois pour l’afficher</div></div></div>
+        <div class="barres">
+          <div class="barres-y" id="barres-y" aria-hidden="true"></div>
+          <div class="barres-zone"><div class="barres-grille" id="barres-grille"></div><div class="barres-colonnes" id="barres-colonnes"></div></div>
+          <div class="barres-x" id="barres-x" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="carte" aria-labelledby="t-budgets">
+        <div class="entete-carte">
+          <div><h2 id="t-budgets">Budgets par catégorie</h2><div class="sous" id="budgets-sous"></div></div>
+          <a href="categories.html">Modifier</a>
+        </div>
+        <div id="budgets"></div>
+      </section>
+    </section>
+
+    <aside class="col-droite" aria-label="Mouvements">
+      <section class="carte" id="zone-mouvements"></section>
+    </aside>
+  </main>
+</div>
+
+<script src="js/format.js"></script>
+<script src="js/db.js"></script>
+<script src="js/local.js"></script>
+<script src="js/donnees.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/graphique.js"></script>
+<script src="js/saisie.js"></script>
+<script src="js/mouvements.js"></script>
+<script src="js/accueil.js"></script>

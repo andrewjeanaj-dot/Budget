@@ -1,0 +1,53 @@
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget — Catégories</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+
+<header class="entete">
+  <h1><a class="retour" href="plus.html" aria-label="Retour">‹</a>Catégories</h1>
+  <span class="statut-hors-ligne"></span>
+</header>
+
+<div class="page">
+  <p class="vide" style="text-align:left; padding:0 4px 10px">
+    Les montants prévus concernent <strong id="libelle-mois-courant"></strong>.
+    Coche « Reconduire » pour les reprendre automatiquement le mois suivant.
+  </p>
+
+  <div id="groupes-categories"></div>
+
+  <details class="carte detail-mois" id="bloc-nouvelle">
+    <summary>＋ Nouvelle catégorie</summary>
+    <p class="vide" style="text-align:left; padding:10px 0; font-size:0.82rem">
+      Une catégorie est un poste de dépense (Courses, Essence, Restaurant…),
+      rangé dans l’un des 4 groupes.
+    </p>
+    <label class="etiquette-champ" for="nouvelle-libelle">Nom de la catégorie</label>
+    <input class="champ" id="nouvelle-libelle" placeholder="ex : Courses, Essence, Restaurant">
+    <label class="etiquette-champ" for="nouvelle-groupe">Ranger dans le groupe</label>
+    <select class="champ" id="nouvelle-groupe">
+      <option value="essentielles">Essentielles</option>
+      <option value="loisirs">Loisirs</option>
+      <option value="projet_perso">Projet perso</option>
+      <option value="imprevus">Imprévus</option>
+    </select>
+    <label class="etiquette-champ" for="nouvelle-prevision">Prévision pour <span id="libelle-mois-nouvelle"></span> (facultatif)</label>
+    <input class="champ" id="nouvelle-prevision" inputmode="numeric" placeholder="ex : 10 000">
+    <label class="case-mois-suivant" style="margin-top:2px">
+      <input type="checkbox" id="nouvelle-reconduire" checked>
+      <span>Reconduire chaque mois (la prévision est reprise le mois suivant)</span>
+    </label>
+    <button class="bouton-principal" id="bouton-ajouter">Ajouter la catégorie</button>
+  </details>
+</div>
+
+<script src="js/format.js"></script>
+<script src="js/db.js"></script>
+<script src="js/local.js"></script>
+<script src="js/donnees.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/categories.js"></script>

@@ -1,0 +1,6 @@
+# Jamais de donnees personnelles dans ce depot (il est public)
+*.json
+!manifest.webmanifest
+*.xlsx
+*.zip
+__pycache__/

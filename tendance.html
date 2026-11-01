@@ -1,0 +1,48 @@
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget — Tendance</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+
+<header class="entete">
+  <h1><a class="retour" href="plus.html" aria-label="Retour">‹</a>Tendance</h1>
+  <span class="statut-hors-ligne"></span>
+</header>
+
+<div class="page">
+  <div class="carte">
+    <select class="champ" id="select-categorie" style="margin-bottom:8px">
+      <option value="">Toutes les catégories</option>
+    </select>
+    <div class="periode">
+      <label><span class="etiquette-champ">Du</span><input class="champ" id="depuis" type="month"></label>
+      <label><span class="etiquette-champ">Au</span><input class="champ" id="jusqua" type="month"></label>
+    </div>
+  </div>
+
+  <div class="carte">
+    <h3 style="margin-top:0">Prévu et dépensé, mois par mois</h3>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; font-size:0.78rem; color:var(--texte); margin-bottom:6px">
+      <span><span style="color:var(--texte-att)">■</span> Prévu</span>
+      <span><span style="color:var(--accent)">■</span> Dépensé</span>
+      <span><span style="color:var(--rouge)">■</span> Dépensé, au-delà du prévu</span>
+    </div>
+    <div id="graphique-barres"></div>
+  </div>
+
+  <div class="carte">
+    <h3 style="margin-top:0">Argent reporté d’un mois sur l’autre</h3>
+    <div id="graphique-ligne"></div>
+  </div>
+</div>
+
+<script src="js/format.js"></script>
+<script src="js/db.js"></script>
+<script src="js/local.js"></script>
+<script src="js/donnees.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/graphique.js"></script>
+<script src="js/tendance.js"></script>

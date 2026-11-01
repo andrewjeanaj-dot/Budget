@@ -1,0 +1,45 @@
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget — Plus</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+
+<header class="entete">
+  <h1>Plus</h1>
+  <span class="statut-hors-ligne"></span>
+</header>
+
+<div class="page">
+  <div class="carte">
+    <a class="lien-menu" href="categories.html">
+      <span class="icone">🏷️</span>
+      <span><div class="titre">Catégories et prévisions</div><div class="aide">Créer, renommer, fixer le budget de chaque poste</div></span>
+      <span class="fleche">›</span>
+    </a>
+    <a class="lien-menu" href="epargne.html">
+      <span class="icone">🐷</span>
+      <span><div class="titre">Épargne</div><div class="aide">Objectifs, versements et retraits</div></span>
+      <span class="fleche">›</span>
+    </a>
+    <a class="lien-menu" href="tendance.html">
+      <span class="icone">📈</span>
+      <span><div class="titre">Tendance</div><div class="aide">Prévu et dépensé mois par mois, argent reporté</div></span>
+      <span class="fleche">›</span>
+    </a>
+    <a class="lien-menu" href="sauvegarde.html">
+      <span class="icone">💾</span>
+      <span><div class="titre">Sauvegarde et export</div><div class="aide" id="aide-sauvegarde">Mettre tes données à l’abri</div></span>
+      <span class="fleche">›</span>
+    </a>
+  </div>
+</div>
+
+<script src="js/format.js"></script>
+<script src="js/db.js"></script>
+<script src="js/local.js"></script>
+<script src="js/donnees.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/plus.js"></script>
