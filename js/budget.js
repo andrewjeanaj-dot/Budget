@@ -51,7 +51,7 @@ function afficherCartePrincipale(d) {
     detail.textContent = 'dépensés. Fixe tes prévisions dans Plus › Catégories.';
     barre.style.width = '0%';
   } else {
-    etiquette.textContent = depasse ? 'Budget dépassé de' : 'Il te reste à dépenser ce mois-ci';
+    etiquette.textContent = depasse ? 'Budget dépassé de' : 'Il te reste dans ton budget ce mois-ci';
     chiffre.textContent = formatXPF(Math.abs(reste));
     const pct = Math.min(100, Math.round((d.total_reel / d.total_prevu) * 100));
     barre.style.width = `${pct}%`;
