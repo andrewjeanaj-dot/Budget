@@ -32,8 +32,8 @@ async function chargerDepensesLocales(mois) {
   return (snap.depenses[mois] || []).filter((d) => !d.supprime);
 }
 
-async function enregistrerDepense({ montant, categorie_id, note, date, source, moyen }) {
-  const maintenant = nowIso();
+async function enregistrerDepense({ montant, categorie_id, note, date, moyen }) {
+  appareilId();   // marque ce telephone comme deja utilise
   const depense = {
     id: genererUuid(),
     date: date || dateAujourdhui(),
@@ -41,11 +41,7 @@ async function enregistrerDepense({ montant, categorie_id, note, date, source, m
     categorie_id,
     note: note || '',
     moyen: moyen || 'carte',
-    source: source || 'manuel',
-    device_id: appareilId(),
-    cree_le: maintenant,
-    modifie_le: maintenant,
-    supprime: false,
+    cree_le: nowIso(),
   };
   const { ok } = await enfilerOperation('depense.ajouter', depense);
   return { depense, enLocal: ok };

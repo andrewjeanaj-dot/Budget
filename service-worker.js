@@ -1,6 +1,6 @@
 // A incrementer apres TOUTE modification d'un fichier de l'app, sinon les
 // telephones gardent l'ancienne version en cache.
-const VERSION = 'v20';
+const VERSION = 'v23';
 const CACHE_STATIQUE = `budget-statique-${VERSION}`;
 
 const FICHIERS_A_METTRE_EN_CACHE = [
@@ -36,30 +36,27 @@ self.addEventListener('activate', (event) => {
 });
 
 async function cachePuisReseau(request) {
-  // Sert immediatement depuis le cache (instantane, marche hors ligne) et
-  // rafraichit en arriere-plan pour la prochaine ouverture.
+  // Sert depuis le cache, sans rien telecharger ni reecrire : sur un telephone
+  // presque plein, chaque ecriture coute cher. Une nouvelle version arrive par le
+  // changement de VERSION, qui remplace tout le cache d'un coup.
   const cache = await caches.open(CACHE_STATIQUE);
   const enCache = await cache.match(request, { ignoreSearch: true });
-  const reseau = fetch(request, { cache: 'reload' })
-    .then((reponse) => {
-      if (reponse && reponse.ok) cache.put(request, reponse.clone()).catch(() => {});
-      return reponse;
-    })
-    .catch(() => null);
-
   if (enCache) return enCache;
-  const reponse = await reseau;
-  if (reponse) return reponse;
-  if (request.mode === 'navigate') {
-    const repli = await cache.match('index.html');
-    if (repli) return repli;
+  try {
+    const reponse = await fetch(request);
+    if (reponse && reponse.ok) cache.put(request, reponse.clone()).catch(() => {});
+    return reponse;
+  } catch (e) {
+    if (request.mode === 'navigate') {
+      const repli = await cache.match('index.html');
+      if (repli) return repli;
+    }
+    return new Response('Hors ligne', { status: 503, statusText: 'Hors ligne' });
   }
-  return new Response('Hors ligne', { status: 503, statusText: 'Hors ligne' });
 }
 
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
+  if (!event.request.url.startsWith(self.registration.scope)) return;   // hors de l'app
   if (event.request.method !== 'GET') return;
   event.respondWith(cachePuisReseau(event.request));
 });

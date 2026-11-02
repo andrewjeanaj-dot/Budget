@@ -44,7 +44,8 @@ gauche de l'accueil.
   (`js/db.js`, `js/local.js`), avec des copies dans localStorage et le Cache du
   navigateur. localStorage est lu et écrit en premier : IndexedDB peut mettre de
   longues secondes à répondre sur un téléphone presque plein, et il suit en
-  arrière-plan. La version la plus récente gagne. Tous les totaux sont recalculés dans le
+  arrière-plan, regroupé, uniquement quand une copie a changé. Le service worker ne
+  réécrit rien entre deux versions. La version la plus récente gagne. Tous les totaux sont recalculés dans le
   téléphone (`calculerMois`). L'état du stockage s'affiche en bas de « Plus ».
 - Premier lancement : si rien n'est enregistré, l'app propose les
   `CATEGORIES_STANDARD` (`js/local.js`). Elles ne sont écrites qu'à la première

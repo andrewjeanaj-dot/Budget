@@ -20,13 +20,48 @@ let _signalSuspendu = false;
 
 // ─── Etat, garde dans le telephone ─────────────────────────────────────────
 
+// Lu a chaque ecran : garde aussi dans la copie rapide, pour ne pas solliciter le
+// stockage lent. « Aucun » evite de le relire chez qui n'a pas active la sauvegarde.
+const CLE_COFFRE_RAPIDE = 'budget_coffre';
+const CLE_COFFRE_AUCUN = 'budget_coffre_aucun';
+
 async function lireEtatCoffre() {
-  const e = await idbGetSilencieux('cache', CLE_COFFRE);
-  return e ? e.valeur : null;
+  try {
+    const brut = localStorage.getItem(CLE_COFFRE_RAPIDE);
+    if (brut) return JSON.parse(brut);
+    if (localStorage.getItem(CLE_COFFRE_AUCUN)) return null;
+  } catch (e) { /* on passe au stockage principal */ }
+  let etat;
+  try {
+    const e = await idbGet('cache', CLE_COFFRE);
+    etat = e ? e.valeur : null;
+  } catch (e) {
+    return null;   // sans reponse, on ne conclut rien
+  }
+  try {
+    if (etat) localStorage.setItem(CLE_COFFRE_RAPIDE, JSON.stringify(etat));
+    else localStorage.setItem(CLE_COFFRE_AUCUN, '1');
+  } catch (e) { /* sans effet */ }
+  return etat;
 }
 
-function ecrireEtatCoffre(etat) {
-  return idbPutSilencieux('cache', { cle: CLE_COFFRE, valeur: etat });
+async function ecrireEtatCoffre(etat) {
+  let rapide = false;
+  try {
+    localStorage.setItem(CLE_COFFRE_RAPIDE, JSON.stringify(etat));
+    localStorage.removeItem(CLE_COFFRE_AUCUN);
+    rapide = true;
+  } catch (e) { /* le stockage principal prend le relais */ }
+  const principal = idbPutSilencieux('cache', { cle: CLE_COFFRE, valeur: etat });
+  return rapide || principal;
+}
+
+async function oublierEtatCoffre() {
+  try {
+    localStorage.removeItem(CLE_COFFRE_RAPIDE);
+    localStorage.setItem(CLE_COFFRE_AUCUN, '1');
+  } catch (e) { /* sans effet */ }
+  await idbSupprimerSilencieux('cache', CLE_COFFRE);
 }
 
 // ─── Code et chiffrement ───────────────────────────────────────────────────
@@ -213,7 +248,7 @@ async function activerCoffre(depot, cleAcces) {
   await ecrireEtatCoffre({ code, depot, cle_acces: cleAcces, a_envoyer: true, modifie_le: nowIso(), derniere_copie: null });
   if (await envoyerCopieCoffre()) return { code };
   clearTimeout(_minuteurCoffre);
-  await idbSupprimerSilencieux('cache', CLE_COFFRE);
+  await oublierEtatCoffre();
   return { erreur: 'La première copie n’a pas pu partir. Vérifie que la clé peut écrire dans ce dépôt (Contents : Read and write).' };
 }
 
@@ -263,7 +298,7 @@ async function remplacerCleCoffre(cleAcces) {
 // Les copies restent sur GitHub, illisibles sans le code.
 async function arreterCoffre() {
   clearTimeout(_minuteurCoffre);
-  await idbSupprimerSilencieux('cache', CLE_COFFRE);
+  await oublierEtatCoffre();
 }
 
 // ─── Sauvegarde par fichier ────────────────────────────────────────────────

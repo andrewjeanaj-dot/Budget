@@ -3,17 +3,19 @@ function init() {
   enregistrerServiceWorker();
   demarrerVerifications();
   document.getElementById('version-app').textContent = `Version de l’app : ${VERSION_APP}`;
-  // Une ecriture d'essai, a part des donnees, pour voir l'etat reel du stockage.
   document.getElementById('etat-stockage').textContent = 'Enregistrement : vérification…';
-  obtenirInstantane()
-    .then(() => idbPutSilencieux('cache', { cle: 'essai_stockage', valeur: Date.now() }))
-    .then((ok) => {
-      const etat = etatStockage();
-      const ligne = document.getElementById('etat-stockage');
-      if (etat.niveau === 'panne') ligne.textContent = `Enregistrement en panne. Code : ${etat.code}`;
-      else if (!ok) ligne.textContent = `Enregistrement de secours actif. Code : ${derniereErreurIdb()}`;
-      else ligne.textContent = 'Enregistrement : OK';
-    });
+  obtenirInstantane().then(attendreEcritures).then(() => {
+    const etat = etatStockage();
+    const ligne = document.getElementById('etat-stockage');
+    if (etat.niveau === 'panne') ligne.textContent = `Enregistrement en panne. Code : ${etat.code}`;
+    else if (etat.niveau === 'secours') ligne.textContent = `Enregistrement de secours actif. Code : ${etat.code}`;
+    else ligne.textContent = 'Enregistrement : OK';
+  });
+  if (navigator.storage && navigator.storage.estimate) {
+    navigator.storage.estimate().then((e) => {
+      if (e.usage) document.getElementById('place-app').textContent = `Place utilisée par l’app : ${formatNombre(Math.ceil(e.usage / 1024))} Ko`;
+    }).catch(() => {});
+  }
 
   const derniere = lireDerniereSauvegarde();
   const jours = derniere ? joursDepuis(derniere) : null;

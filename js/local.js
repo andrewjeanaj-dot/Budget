@@ -87,10 +87,12 @@ function ecrireMiroir(valeur, ecritLe) {
     localStorage.setItem(CLE_MIROIR, JSON.stringify({ ecrit_le: ecritLe, valeur }));
     return true;
   } catch (e) {
-    // Une copie devenue ancienne ne doit pas etre relue a la place de la bonne.
-    try { localStorage.removeItem(CLE_MIROIR); } catch (e2) { /* sans effet */ }
     return false;
   }
+}
+
+function oublierMiroir() {
+  try { localStorage.removeItem(CLE_MIROIR); } catch (e) { /* sans effet */ }
 }
 
 async function lireStockagePrincipal() {
@@ -124,8 +126,25 @@ let _verification = null;
 let _aEcrire = null;          // derniere version a ecrire, les intermediaires sont sautees
 let _boucleEcriture = null;
 let _dernierResultat = { principal: true, cache: true };
+let _minuteurEcritures = null;
+const DELAI_REGROUPEMENT_MS = 800;   // plusieurs saisies rapprochees : une seule ecriture
+const CLE_PRINCIPAL_A_JOUR = 'budget_principal_a_jour';
+
+// Date de la version que les stockages lents ont bien recue : si c'est celle de la
+// copie rapide, inutile de les solliciter a chaque ecran.
+function dateStockagesAJour() {
+  try { return Number(localStorage.getItem(CLE_PRINCIPAL_A_JOUR)) || 0; } catch (e) { return 0; }
+}
+
+function noterStockagesAJour(ecritLe) {
+  try { localStorage.setItem(CLE_PRINCIPAL_A_JOUR, String(ecritLe)); } catch (e) { /* sans effet */ }
+}
 
 function lancerEcritures() {
+  clearTimeout(_minuteurEcritures);
+  _minuteurEcritures = null;
+  // Rien a ecrire : surtout ne pas demarrer, la boucle resterait marquee en cours.
+  if (!_boucleEcriture && !_aEcrire) return Promise.resolve(_dernierResultat);
   if (!_boucleEcriture) {
     _boucleEcriture = (async () => {
       while (_aEcrire) {
@@ -137,6 +156,7 @@ function lancerEcritures() {
         ]);
         _dernierResultat = { principal, cache };
         _secoursActif = !principal;
+        if (principal && cache) noterStockagesAJour(ecritLe);
       }
       _boucleEcriture = null;
       return _dernierResultat;
@@ -145,10 +165,43 @@ function lancerEcritures() {
   return _boucleEcriture;
 }
 
+function programmerEcritures() {
+  clearTimeout(_minuteurEcritures);
+  _minuteurEcritures = setTimeout(lancerEcritures, DELAI_REGROUPEMENT_MS);
+}
+
+// L'app passe en arriere-plan ou change d'ecran : on ecrit sans attendre. Si le
+// telephone coupe avant la fin, la prochaine ouverture rattrape.
+function ecrireAvantDePartir() {
+  if (_minuteurEcritures) lancerEcritures();
+}
+window.addEventListener('pagehide', ecrireAvantDePartir);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') ecrireAvantDePartir();
+});
+
 // Attend la fin du travail en arriere-plan.
 async function attendreEcritures() {
+  ecrireAvantDePartir();
   if (_verification) await _verification;
   if (_boucleEcriture) await _boucleEcriture;
+}
+
+// Allege ce qui est garde : champs qui ne servent plus, et depenses supprimees
+// (le bouton « Annuler » ne survit pas au changement d'ecran).
+function compacterDepense(d) {
+  delete d.device_id;
+  delete d.source;
+  delete d.modifie_le;
+  if (!d.supprime) delete d.supprime;
+  return d;
+}
+
+function compacterInstantane(snap) {
+  for (const mois of Object.keys(snap.depenses || {})) {
+    snap.depenses[mois] = snap.depenses[mois].filter((d) => !d.supprime).map(compacterDepense);
+  }
+  return snap;
 }
 
 function adopterVersion(valeur, ecritLe) {
@@ -191,7 +244,7 @@ async function chargerInstantane() {
   if (miroir && miroir.valeur) {
     _instantane = miroir.valeur;
     _ecritLe = miroir.ecrit_le || 0;
-    verifierPrincipal();
+    if (dateStockagesAJour() !== _ecritLe) verifierPrincipal();
     return _instantane;
   }
   const copieCache = await Promise.race([lireCacheDonnees(), apresDelai(1000, null)]);
@@ -223,7 +276,8 @@ async function chargerInstantane() {
     // Donnees d'avant les copies de secours : on les protege des maintenant.
     if (enCache && enCache.valeur) {
       ecrireMiroir(enCache.valeur, _ecritLe);
-      ecrireCacheDonnees(enCache.valeur, _ecritLe);
+      const dateLue = _ecritLe;
+      ecrireCacheDonnees(enCache.valeur, dateLue).then((ok) => { if (ok) noterStockagesAJour(dateLue); });
     }
     return _instantane;
   }
@@ -249,7 +303,7 @@ async function chargerInstantane() {
 async function obtenirInstantane() {
   if (_instantane) return _instantane;
   if (!_lectureEnCours) {
-    _lectureEnCours = chargerInstantane().finally(() => { _lectureEnCours = null; });
+    _lectureEnCours = chargerInstantane().then(compacterInstantane).finally(() => { _lectureEnCours = null; });
   }
   return _lectureEnCours;
 }
@@ -267,13 +321,18 @@ async function definirInstantane(snap) {
   _ecritLe = ecritLe;
   const okRapide = ecrireMiroir(snap, ecritLe);
   _aEcrire = { snap, ecritLe };
-  const ecritures = lancerEcritures();
   let ok = okRapide;
-  if (!okRapide) {
+  if (okRapide) {
+    programmerEcritures();
+  } else {
     // La copie rapide a echoue : on attend une autre preuve, le cache d'abord car
     // IndexedDB peut etre tres lent.
+    const ecritures = lancerEcritures();
     ok = await ecrireCacheDonnees(snap, ecritLe);
     if (!ok) ok = (await ecritures).principal;
+    // L'ancienne copie rapide ne s'efface qu'une fois une version plus recente en
+    // lieu sur : si tout est plein, elle reste la derniere bonne copie.
+    if (ok) oublierMiroir();
   }
   _stockageEnEchec = !ok;
   if (ok && typeof signalerChangementCoffre === 'function') signalerChangementCoffre();
@@ -289,7 +348,8 @@ function etatStockage() {
 
 // Remet a zero les copies de secours (essais).
 async function oublierCopieSecours() {
-  try { localStorage.removeItem(CLE_MIROIR); } catch (e) { /* sans effet */ }
+  oublierMiroir();
+  try { localStorage.removeItem(CLE_PRINCIPAL_A_JOUR); } catch (e) { /* sans effet */ }
   try { await caches.delete(CACHE_DONNEES); } catch (e) { /* sans effet */ }
 }
 
