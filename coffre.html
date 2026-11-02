@@ -1,0 +1,51 @@
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget — Sauvegarde automatique</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+
+<header class="entete">
+  <h1><a class="retour" href="plus.html" aria-label="Retour">‹</a>Sauvegarde auto</h1>
+  <span class="statut-hors-ligne"></span>
+</header>
+
+<div class="page guide">
+  <div id="zone-coffre"></div>
+
+  <details class="carte">
+    <summary>Tu as déjà un code ?</summary>
+    <p>Nouveau téléphone, app réinstallée : retrouve tes données. Si tu n’as plus ta clé d’accès, crée-en une nouvelle sur GitHub.</p>
+    <label class="etiquette-champ" for="champ-depot-recup">Dépôt privé</label>
+    <input class="champ" id="champ-depot-recup" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="pseudo/budget-sauvegardes">
+    <label class="etiquette-champ" for="champ-cle-recup">Clé d’accès</label>
+    <input class="champ" id="champ-cle-recup" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="github_pat_…">
+    <label class="etiquette-champ" for="champ-code">Code de récupération</label>
+    <input class="champ" id="champ-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX">
+    <button class="bouton-secondaire" id="bouton-chercher" type="button" style="margin-top:0">Chercher mes copies</button>
+    <p class="form-err" id="erreur-recuperation" role="alert"></p>
+    <div id="zone-copies" hidden>
+      <label class="etiquette-champ" for="choix-copie">Copie à récupérer</label>
+      <select class="champ" id="choix-copie"></select>
+      <button class="bouton-principal" id="bouton-recuperer" type="button">Récupérer cette copie</button>
+    </div>
+  </details>
+
+  <section class="carte">
+    <h3>Comment c’est protégé</h3>
+    <p>La copie est fermée à clé dans ton téléphone avant de partir. Seul ton code l’ouvre, et il ne quitte jamais ton téléphone.</p>
+    <p>En contrepartie, un code perdu ne peut pas être récupéré.</p>
+    <p>La clé d’accès ne sert qu’à écrire dans ton dépôt. Elle reste dans ce téléphone : ne la donne à personne.</p>
+    <p>Une copie est gardée par jour. L’app propose les 7 plus récentes.</p>
+  </section>
+</div>
+
+<script src="js/format.js"></script>
+<script src="js/db.js"></script>
+<script src="js/local.js"></script>
+<script src="js/coffre.js"></script>
+<script src="js/donnees.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/page-coffre.js"></script>

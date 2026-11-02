@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Budget — Mode d’emploi</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -62,29 +62,40 @@
   </section>
 
   <section class="carte" id="sauvegarde">
-    <h3>Sauvegarder : le geste à ne pas oublier</h3>
-    <p>Tes données sont uniquement dans ce téléphone. Aucun serveur n’en garde de copie. <b>Si tu perds ton téléphone sans sauvegarde, elles sont perdues.</b></p>
-    <p><b>Une fois par semaine :</b></p>
-    <ol>
-      <li>Va dans Plus › Sauvegarde et export.</li>
-      <li>Touche « Créer un fichier de sauvegarde ».</li>
-      <li>Sur iPhone, choisis « Enregistrer dans Fichiers », puis iCloud Drive. Sur Android, choisis Google Drive.</li>
-    </ol>
-    <p>Évite de le garder seulement sur le téléphone : il disparaîtrait avec lui. L’app te rappelle de sauvegarder après 7 jours.</p>
-    <p><b>Pour récupérer tes données :</b> installe l’app, va dans Plus › Sauvegarde et export, touche « Choisir un fichier… » et prends ta sauvegarde la plus récente. Tout ce qui se trouve dans l’app est alors remplacé.</p>
-    <p><b>Attention :</b> supprimer l’icône de l’app peut effacer tes données. Sauvegarde avant.</p>
-    <p>Ce fichier contient tous tes chiffres : ne l’envoie à personne.</p>
+    <h3>Sauvegarder</h3>
+    <p>Tes données sont dans ce téléphone. <b>Si tu le perds sans copie ailleurs, elles sont perdues.</b> Supprimer l’icône de l’app peut aussi les effacer.</p>
+    <p><b>L’app te le rappelle :</b> quand ta dernière copie date de plus de 7 jours, l’accueil te propose « Sauvegarder maintenant ». Touche-le, choisis « Enregistrer dans Fichiers », puis iCloud Drive. Sur Android, choisis Google Drive.</p>
+    <p>Tu peux aussi le faire quand tu veux : Plus › Fichier de sauvegarde et export › « Créer un fichier de sauvegarde ».</p>
+    <p><b>Pour récupérer tes données :</b> installe l’app, va dans Plus › Fichier de sauvegarde et export, touche « Choisir un fichier… » et prends le plus récent. Tout ce qui se trouve dans l’app est alors remplacé.</p>
+    <p>Ce fichier est lisible : ne l’envoie à personne.</p>
   </section>
 
+  <details class="carte" id="sauvegarde-auto">
+    <summary>Sauvegarde automatique, avec un compte GitHub</summary>
+    <p>Une copie illisible part seule à chaque changement, dans un dépôt privé à toi. Il faut un compte GitHub, et quelques minutes une seule fois.</p>
+    <ol>
+      <li>Sur github.com, crée un dépôt en cochant <b>Private</b>.</li>
+      <li>Crée une clé d’accès : Settings › Developer settings › Personal access tokens › Fine-grained tokens › Generate new token.</li>
+      <li>Dans <b>Repository access</b>, choisis seulement ce dépôt. Dans <b>Permissions</b>, mets <b>Contents</b> sur <b>Read and write</b>.</li>
+      <li>Dans l’app, va dans Plus › Sauvegarde automatique, écris le dépôt, colle la clé, puis active.</li>
+      <li>Note ton code de récupération hors du téléphone : gestionnaire de mots de passe, e-mail à toi-même ou papier.</li>
+    </ol>
+    <p><b>Nouveau téléphone :</b> dans Plus › Sauvegarde automatique › Tu as déjà un code ?, écris le dépôt, une clé d’accès et ton code.</p>
+    <p><b>Attention :</b> sans ton code, personne ne peut relire tes copies. Si la clé expire, l’app te le signale et les copies se mettent en pause.</p>
+  </details>
+
   <section class="carte">
-    <h3>Tes données restent chez toi</h3>
-    <p>L’app n’a ni compte ni serveur. Ce que tu saisis n’est envoyé nulle part, et personne d’autre ne peut le voir. Elle marche aussi sans réseau.</p>
+    <h3>Tes données restent à toi</h3>
+    <p>L’app n’a pas de compte ni de serveur. Sans sauvegarde automatique, rien ne quitte ton téléphone.</p>
+    <p>Avec elle, une copie illisible part dans ton dépôt GitHub privé : elle est fermée à clé avant de partir, et seul ton code l’ouvre.</p>
+    <p>L’app marche aussi sans réseau.</p>
   </section>
 </div>
 
 <script src="js/format.js"></script>
 <script src="js/db.js"></script>
 <script src="js/local.js"></script>
+<script src="js/coffre.js"></script>
 <script src="js/donnees.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/guide.js"></script>

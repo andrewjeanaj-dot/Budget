@@ -257,12 +257,57 @@ function rendreBienvenue(snap) {
     el('ol', {},
       el('li', {}, 'Note ton revenu avec le +.'),
       el('li', {}, 'Fixe tes prévisions dans Plus › Catégories et prévisions.'),
-      el('li', {}, 'Sauvegarde chaque semaine : tes données sont seulement dans ce téléphone.')),
+      el('li', {}, 'Mets tes données à l’abri : elles sont seulement dans ce téléphone. L’app te le rappellera.')),
     el('a', { class: 'bouton-principal', href: 'guide.html', style: { display: 'block', textAlign: 'center', textDecoration: 'none' } }, 'Lire le mode d’emploi'),
     el('button', { type: 'button', class: 'bouton-secondaire', id: 'bienvenue-compris', onclick: () => {
       try { localStorage.setItem(CLE_BIENVENUE_VUE, '1'); } catch (e) { /* sans effet */ }
       zone.replaceChildren();
     } }, 'Compris')));
+}
+
+// ─── Rappel de sauvegarde ──────────────────────────────────────────────────
+
+const CLE_RAPPEL_REPORTE = 'budget_rappel_reporte';
+const JOURS_REPORT_RAPPEL = 3;
+
+function rappelReporte() {
+  try {
+    const jusqua = localStorage.getItem(CLE_RAPPEL_REPORTE);
+    return !!jusqua && new Date(jusqua).getTime() > Date.now();
+  } catch (e) { return false; }
+}
+
+// Le telephone exige un geste pour creer un fichier : on le propose au bon
+// moment, sans rien demander tant qu'une copie recente existe.
+async function rendreRappelSauvegarde(snap) {
+  const zone = document.getElementById('rappel-sauvegarde');
+  const aDesMouvements = [snap.depenses, snap.revenus].some((parMois) => Object.values(parMois || {}).some((liste) => liste.length > 0));
+  const etat = await lireEtatCoffre();
+  if (etat && etat.code && etat.erreur === 'acces') {
+    zone.replaceChildren(el('section', { class: 'carte guide' },
+      el('h3', {}, '⚠️ Sauvegarde automatique en panne'),
+      el('p', {}, 'Tes données sont toujours là, mais les copies sont en pause.'),
+      el('a', { class: 'bouton-principal', href: 'coffre.html', style: { display: 'block', textAlign: 'center', textDecoration: 'none' } }, 'Réparer')));
+    return;
+  }
+  const derniere = etat && etat.code ? etat.derniere_copie : lireDerniereSauvegarde();
+  const jours = derniere ? joursDepuis(derniere) : null;
+  const aJour = etat && etat.code ? (jours === null || jours < JOURS_AVANT_RAPPEL) : (jours !== null && jours < JOURS_AVANT_RAPPEL);
+  if (!aDesMouvements || aJour || rappelReporte()) { zone.replaceChildren(); return; }
+  zone.replaceChildren(el('section', { class: 'carte guide' },
+    el('h3', {}, '🔒 Mets tes données à l’abri'),
+    el('p', {}, jours === null ? 'Aucune copie de tes données n’existe hors de ce téléphone.' : `Ta dernière copie date de ${jours} jours.`),
+    el('button', { type: 'button', class: 'bouton-principal', id: 'rappel-sauvegarder', onclick: async () => {
+      if (!(await creerFichierSauvegarde())) return;
+      afficherToast('Sauvegarde créée ✓');
+      zone.replaceChildren();
+      majStatutSauvegarde();
+    } }, 'Sauvegarder maintenant'),
+    el('p', { style: { marginTop: '8px' } }, 'Sur iPhone, choisis ensuite « Enregistrer dans Fichiers », puis iCloud Drive.'),
+    el('button', { type: 'button', class: 'bouton-secondaire', id: 'rappel-plus-tard', onclick: () => {
+      try { localStorage.setItem(CLE_RAPPEL_REPORTE, new Date(Date.now() + JOURS_REPORT_RAPPEL * 86400000).toISOString()); } catch (e) { /* sans effet */ }
+      zone.replaceChildren();
+    } }, 'Plus tard')));
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────
@@ -275,6 +320,7 @@ async function rendreTableau() {
   const calc = calculerMois(snap, moisAffiche);
   const parId = categoriesParId(snap.categories || []);
   rendreBienvenue(snap);
+  rendreRappelSauvegarde(snap);
   rendreChiffres(calc, snap);
   rendreAnneau(calc, parId);
   rendreBarres(snap);

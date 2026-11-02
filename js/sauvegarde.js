@@ -2,8 +2,6 @@
 // filet de securite : sans serveur, les donnees n'existent que dans ce
 // telephone.
 
-const FORMAT_SAUVEGARDE = 'budget-app';
-const VERSION_SAUVEGARDE = 1;
 
 function init() {
   injecterNav('sauvegarde');
@@ -42,44 +40,9 @@ async function afficherEtat() {
 }
 
 async function exporter() {
-  const snap = await obtenirInstantane();
-  const contenu = JSON.stringify({
-    format: FORMAT_SAUVEGARDE,
-    version: VERSION_SAUVEGARDE,
-    exporte_le: nowIso(),
-    donnees: snap,
-  });
-  const nom = `budget_sauvegarde_${dateAujourdhui()}.json`;
-  const fichier = new File([contenu], nom, { type: 'application/json' });
-  if (!(await partagerFichier(fichier))) return;
-  noterSauvegardeFaite();
+  if (!(await creerFichierSauvegarde())) return;
   afficherToast('Sauvegarde créée ✓');
   afficherEtat();
-}
-
-// Sur iPhone, le partage propose « Enregistrer dans Fichiers » (iCloud,
-// OneDrive...). Le telechargement classique y est peu fiable en mode app.
-// Renvoie false si l'utilisateur a annule ou si le partage a echoue.
-async function partagerFichier(fichier) {
-  if (navigator.canShare && navigator.canShare({ files: [fichier] })) {
-    try {
-      await navigator.share({ files: [fichier], title: fichier.name });
-    } catch (e) {
-      if (e && e.name === 'AbortError') return false;   // annule : rien n'est cree
-      alert('Le partage a échoué : ' + e.message);
-      return false;
-    }
-  } else {
-    const url = URL.createObjectURL(fichier);
-    const lien = document.createElement('a');
-    lien.href = url;
-    lien.download = fichier.name;
-    document.body.appendChild(lien);
-    lien.click();
-    lien.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  }
-  return true;
 }
 
 // Cellule CSV pour Excel (separateur « ; »). Un texte qui commence par = + -
@@ -121,18 +84,6 @@ async function exporterCsv() {
   const contenu = '﻿' + tableau.map((l) => l.map(celluleCsv).join(';')).join('\r\n');
   const fichier = new File([contenu], `budget_mouvements_${dateAujourdhui()}.csv`, { type: 'text/csv' });
   if (await partagerFichier(fichier)) afficherToast(`Export créé : ${lignes.length} mouvements ✓`);
-}
-
-// Accepte un fichier exporte par l'app, ou un instantane brut (export de la V1).
-function extraireDonnees(json) {
-  const d = json && json.format === FORMAT_SAUVEGARDE ? json.donnees : json;
-  const valide = d
-    && Array.isArray(d.categories)
-    && d.budgets && typeof d.budgets === 'object'
-    && d.depenses && typeof d.depenses === 'object'
-    && d.revenus && typeof d.revenus === 'object'
-    && d.epargne && Array.isArray(d.epargne.objectifs) && Array.isArray(d.epargne.mouvements);
-  return valide ? d : null;
 }
 
 async function importer(evt) {

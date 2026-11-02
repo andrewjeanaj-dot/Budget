@@ -3,12 +3,13 @@
 Application gratuite de suivi de budget, pensée pour noter une dépense en
 quelques secondes, directement à la caisse, depuis son téléphone.
 
-- **Aucun compte, aucun serveur** : les données restent dans le téléphone,
-  rien n'est envoyé sur internet.
+- **Aucun compte, aucun serveur** : les données restent dans le téléphone. Seule
+  la sauvegarde automatique, si on l'active, envoie une copie chiffrée dans un
+  dépôt GitHub privé de l'utilisateur.
 - **Marche hors ligne** une fois installée sur l'écran d'accueil.
-- **Sauvegarde par fichier** (Plus › Sauvegarde et export) : à ranger dans
-  iCloud Drive, OneDrive ou Google Drive. C'est la seule façon de retrouver
-  ses données en cas de perte ou de changement de téléphone.
+- **Sauvegarde par fichier** (Plus › Fichier de sauvegarde et export) : à ranger
+  dans iCloud Drive, OneDrive ou Google Drive. L'accueil la propose quand la
+  dernière copie date de plus de 7 jours.
 - **Tableau de bord** : revenus, dépenses et « Il te reste » du mois (l'argent
   réel du moment), encore prévu et fin de mois prévue, dépenses par catégorie, 6 derniers
   mois, budgets par catégorie qui passent au rouge en cas de dépassement.
@@ -45,6 +46,10 @@ gauche de l'accueil.
 - Premier lancement : si rien n'est enregistré, l'app propose les
   `CATEGORIES_STANDARD` (`js/local.js`). Elles ne sont écrites qu'à la première
   modification, et n'arrivent jamais sur un téléphone qui a déjà des données.
+- Sauvegarde automatique : `js/coffre.js` chiffre l'instantané (AES-GCM, clé
+  tirée du code par HKDF) et le dépose dans un dépôt GitHub privé de
+  l'utilisateur, avec sa clé d'accès (`copies/<dossier>/<jour>.bin`, une copie
+  par jour, un dossier par code). Un dépôt public est refusé.
 - Hors ligne : `service-worker.js` met tous les fichiers en cache.
   **Après toute modification d'un fichier, incrémenter `VERSION` dans
   `service-worker.js`**, sinon les téléphones gardent l'ancienne version.

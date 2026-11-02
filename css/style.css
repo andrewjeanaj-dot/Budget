@@ -115,6 +115,11 @@ h3 { font-size: 1.02rem; font-weight: 600; }
 .guide ol { padding-left: 20px; margin: 8px 0; }
 .guide li { margin-bottom: 6px; }
 .guide-exemple { background: var(--accent-fond); border-radius: 12px; padding: 10px 12px; }
+.code-coffre {
+  background: var(--accent-fond); border-radius: 12px; padding: 12px;
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1rem !important;
+  text-align: center; overflow-wrap: anywhere; user-select: all;
+}
 
 .vide {
   text-align: center;

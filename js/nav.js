@@ -1,6 +1,6 @@
 // Pages rangees sous l'onglet « Plus » : elles servent rarement, elles ne
 // meritent pas une place permanente dans la barre du bas.
-const PAGES_PLUS = ['plus', 'categories', 'epargne', 'sauvegarde', 'tendance', 'guide'];
+const PAGES_PLUS = ['plus', 'categories', 'epargne', 'sauvegarde', 'tendance', 'guide', 'coffre'];
 
 // Le « + » central ouvre la saisie : a la caisse, il doit tomber sous le pouce.
 function injecterNav(actif) {
@@ -71,7 +71,11 @@ async function majStatutSauvegarde() {
   if (!badge) return;
   const snap = await obtenirInstantane();
   const aDesDonnees = (snap.categories || []).length > 0;
-  const derniere = lireDerniereSauvegarde();
+  // Avec la sauvegarde auto, c'est sa derniere copie qui compte. Sinon, le dernier fichier.
+  const coffre = await lireEtatCoffre();
+  const coffreActif = !!(coffre && coffre.code);
+  const page = coffreActif ? 'coffre.html' : 'sauvegarde.html';
+  const derniere = coffreActif ? coffre.derniere_copie : lireDerniereSauvegarde();
   const jours = derniere ? joursDepuis(derniere) : null;
 
   let texte = '';
@@ -80,8 +84,10 @@ async function majStatutSauvegarde() {
     texte = 'Stockage en échec'; alerte = true;
   } else if (!aDesDonnees) {
     texte = '';
+  } else if (coffreActif && coffre.erreur === 'acces') {
+    texte = 'Sauvegarde en panne'; alerte = true;
   } else if (jours === null) {
-    texte = 'Jamais sauvegardé'; alerte = true;
+    texte = coffreActif ? 'Copie en attente' : 'Jamais sauvegardé'; alerte = true;
   } else {
     texte = jours === 0 ? 'Sauvegardé aujourd’hui' : `Sauvegarde : il y a ${jours} j`;
     alerte = jours >= JOURS_AVANT_RAPPEL;
@@ -91,10 +97,7 @@ async function majStatutSauvegarde() {
   badge.style.display = texte ? '' : 'none';
   badge.style.cursor = 'pointer';
   badge.title = 'Ouvrir la sauvegarde';
-  if (!badge._lienInstalle) {
-    badge._lienInstalle = true;
-    badge.addEventListener('click', () => { location.href = 'sauvegarde.html'; });
-  }
+  badge.onclick = () => { location.href = page; };
 }
 
 // Demande au navigateur de ne jamais effacer les donnees de l'app pour

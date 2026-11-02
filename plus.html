@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Budget — Plus</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -34,9 +34,14 @@
       <span><div class="titre">Tendance</div><div class="aide">Prévu et dépensé mois par mois, argent reporté</div></span>
       <span class="fleche">›</span>
     </a>
+    <a class="lien-menu" href="coffre.html">
+      <span class="icone">🔒</span>
+      <span><div class="titre">Sauvegarde automatique</div><div class="aide" id="aide-coffre">Sans y penser, avec un compte GitHub</div></span>
+      <span class="fleche">›</span>
+    </a>
     <a class="lien-menu" href="sauvegarde.html">
       <span class="icone">💾</span>
-      <span><div class="titre">Sauvegarde et export</div><div class="aide" id="aide-sauvegarde">Mettre tes données à l’abri</div></span>
+      <span><div class="titre">Fichier de sauvegarde et export</div><div class="aide" id="aide-sauvegarde">Garder une copie, ouvrir dans Excel</div></span>
       <span class="fleche">›</span>
     </a>
   </div>
@@ -45,6 +50,7 @@
 <script src="js/format.js"></script>
 <script src="js/db.js"></script>
 <script src="js/local.js"></script>
+<script src="js/coffre.js"></script>
 <script src="js/donnees.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/plus.js"></script>

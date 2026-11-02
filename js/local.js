@@ -64,7 +64,22 @@ async function definirInstantane(snap) {
   _instantane = snap;
   const ok = await idbPutSilencieux('cache', { cle: CLE_INSTANTANE, valeur: snap });
   _stockageEnEchec = !ok;
+  if (ok && typeof signalerChangementCoffre === 'function') signalerChangementCoffre();
   return ok;
+}
+
+const FORMAT_SAUVEGARDE = 'budget-app';
+
+// Accepte un fichier exporte par l'app, ou un instantane brut (export de la V1).
+function extraireDonnees(json) {
+  const d = json && json.format === FORMAT_SAUVEGARDE ? json.donnees : json;
+  const valide = d
+    && Array.isArray(d.categories)
+    && d.budgets && typeof d.budgets === 'object'
+    && d.depenses && typeof d.depenses === 'object'
+    && d.revenus && typeof d.revenus === 'object'
+    && d.epargne && Array.isArray(d.epargne.objectifs) && Array.isArray(d.epargne.mouvements);
+  return valide ? d : null;
 }
 
 function stockageEnEchec() {
