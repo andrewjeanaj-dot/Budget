@@ -4,8 +4,11 @@
 // telephone, d'ou la sauvegarde par fichier (sauvegarde.js).
 
 const CLE_INSTANTANE = 'instantane';
+const CLE_MIROIR = 'budget_instantane_miroir';
 let _instantane = null;
-let _stockageEnEchec = false;   // vrai si la derniere ecriture n'a pas abouti
+let _stockageEnEchec = false;   // vrai si la derniere ecriture n'a abouti nulle part
+let _lectureEnEchec = false;    // vrai si les donnees n'ont pas pu etre relues
+let _secoursActif = false;      // vrai si seule la copie de secours a ete ecrite
 
 function instantaneVide() {
   return {
@@ -44,28 +47,87 @@ function instantanePremierLancement() {
   return snap;
 }
 
+// Copie de secours dans le telephone, dans un second stockage : si le principal
+// refuse une ecriture, la saisie n'est pas perdue.
+function lireMiroir() {
+  try {
+    const brut = localStorage.getItem(CLE_MIROIR);
+    return brut ? JSON.parse(brut) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function ecrireMiroir(valeur, ecritLe) {
+  try {
+    localStorage.setItem(CLE_MIROIR, JSON.stringify({ ecrit_le: ecritLe, valeur }));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function lireStockagePrincipal() {
+  try {
+    return await idbGet('cache', CLE_INSTANTANE);
+  } catch (e) {
+    noterErreurIdb(e);
+  }
+  await reinitialiserConnexionIdb();
+  return idbGet('cache', CLE_INSTANTANE);
+}
+
 async function obtenirInstantane() {
   if (_instantane) return _instantane;
+  const miroir = lireMiroir();
   // Un telephone qui n'a encore rien enregistre recoit les categories standards.
   // Une lecture en echec ne doit surtout pas passer pour un premier lancement :
   // la moindre saisie ecraserait alors les vraies donnees avec ces categories.
   try {
-    const enCache = await idbGet('cache', CLE_INSTANTANE);
-    _instantane = enCache ? (enCache.valeur || instantaneVide()) : instantanePremierLancement();
+    const enCache = await lireStockagePrincipal();
+    _lectureEnEchec = false;
+    if (miroir && miroir.valeur && (!enCache || miroir.ecrit_le > (enCache.ecrit_le || 0))) {
+      _instantane = miroir.valeur;   // le principal avait refuse la derniere ecriture
+    } else {
+      _instantane = enCache ? (enCache.valeur || instantaneVide()) : instantanePremierLancement();
+    }
   } catch (e) {
-    _instantane = instantaneVide();
+    noterErreurIdb(e);
+    _lectureEnEchec = !(miroir && miroir.valeur);
+    _instantane = miroir && miroir.valeur ? miroir.valeur : instantaneVide();
   }
   return _instantane;
 }
 
-// Ecrit l'instantane dans le stockage du telephone. Renvoie false en cas
-// d'echec : c'est la seule copie des donnees, l'appelant doit le signaler.
+// Ecrit l'instantane dans le telephone. Renvoie false si rien n'a pu etre ecrit :
+// l'appelant doit le signaler. Sans lecture fiable, on n'ecrit rien : une app
+// affichee vide ne doit jamais remplacer les vraies donnees.
 async function definirInstantane(snap) {
   _instantane = snap;
-  const ok = await idbPutSilencieux('cache', { cle: CLE_INSTANTANE, valeur: snap });
+  if (_lectureEnEchec) {
+    _stockageEnEchec = true;
+    return false;
+  }
+  const ecritLe = Date.now();
+  const okPrincipal = await idbPutSilencieux('cache', { cle: CLE_INSTANTANE, valeur: snap, ecrit_le: ecritLe });
+  const okSecours = ecrireMiroir(snap, ecritLe);
+  const ok = okPrincipal || okSecours;
   _stockageEnEchec = !ok;
+  _secoursActif = !okPrincipal && okSecours;
   if (ok && typeof signalerChangementCoffre === 'function') signalerChangementCoffre();
   return ok;
+}
+
+// Lue a l'ecran et dans les alertes : ce qui permet de comprendre une panne a distance.
+function etatStockage() {
+  if (_lectureEnEchec || _stockageEnEchec) return { niveau: 'panne', code: derniereErreurIdb() || 'Lecture impossible' };
+  if (_secoursActif) return { niveau: 'secours', code: derniereErreurIdb() };
+  return { niveau: 'ok', code: '' };
+}
+
+// Remet a zero toutes les copies gardees dans le telephone (essais, restauration).
+function oublierCopieSecours() {
+  try { localStorage.removeItem(CLE_MIROIR); } catch (e) { /* sans effet */ }
 }
 
 const FORMAT_SAUVEGARDE = 'budget-app';
@@ -380,8 +442,9 @@ async function enfilerOperation(type, payload) {
   const ok = await definirInstantane(snap);
   if (!ok) {
     alert('Attention : le téléphone n’a pas pu enregistrer cette modification.\n\n'
-      + 'Elle reste visible tant que l’app est ouverte, mais sera perdue à la '
-      + 'fermeture. Fais une sauvegarde (onglet Sauvegarde) puis relance l’app.');
+      + 'Elle sera perdue à la fermeture de l’app. Ferme complètement l’app, rouvre-la '
+      + 'et réessaie. Vérifie aussi qu’il reste de la place sur le téléphone.\n\n'
+      + `Code à transmettre : ${etatStockage().code}`);
   }
   // Sur ordinateur, l'accueil affiche saisie, tableau et liste ensemble :
   // chacun se redessine quand les donnees changent.

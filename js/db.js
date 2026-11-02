@@ -1,8 +1,28 @@
 const DB_NOM = 'budget-app-db';
 const DB_VERSION = 2;   // v2 : ajout de la file d'attente des modifications
-const DELAI_IDB_MS = 3000;
+const DELAI_IDB_MS = 8000;   // un telephone lent ou presque plein peut mettre plusieurs secondes
 let _dbPromise = null;
 let _idbIndisponible = false;
+let _derniereErreurIdb = '';
+
+function noterErreurIdb(e) {
+  _derniereErreurIdb = `${(e && e.name) || 'Erreur'} : ${(e && e.message) || 'sans détail'}`;
+}
+
+function derniereErreurIdb() {
+  return _derniereErreurIdb;
+}
+
+// Repart d'une connexion neuve : iOS peut couper celle en cours quand l'app passe
+// en arriere-plan, et toutes les ecritures suivantes echouent jusqu'au rechargement.
+async function reinitialiserConnexionIdb() {
+  const ancienne = _dbPromise;
+  _dbPromise = null;
+  _idbIndisponible = false;
+  if (ancienne) {
+    try { (await ancienne).close(); } catch (e) { /* deja fermee */ }
+  }
+}
 
 // IndexedDB peut rester bloque indefiniment (base en cours de suppression,
 // stockage sature, mode restreint du navigateur). Sans delai maximum, l'app
@@ -40,7 +60,12 @@ function ouvrirDB() {
         db.createObjectStore('outbox', { keyPath: 'id' });
       }
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => {
+      const db = req.result;
+      db.onclose = () => { _dbPromise = null; };
+      db.onversionchange = () => { db.close(); _dbPromise = null; };
+      resolve(db);
+    };
     req.onerror = () => reject(req.error);
     req.onblocked = () => reject(new Error('IndexedDB bloquee'));
   }), 'ouverture').catch((e) => {
@@ -91,11 +116,27 @@ async function idbGet(store, cle) {
 // Variantes tolerantes : ne propagent jamais d'erreur. A utiliser partout ou
 // le stockage local est un confort (cache) et non la source de verite.
 async function idbPutSilencieux(store, valeur) {
-  try { await idbPut(store, valeur); return true; } catch (e) { return false; }
+  try {
+    await idbPut(store, valeur);
+    _derniereErreurIdb = '';
+    return true;
+  } catch (e) {
+    noterErreurIdb(e);
+  }
+  // Une seconde chance, sur une connexion neuve.
+  await reinitialiserConnexionIdb();
+  try {
+    await idbPut(store, valeur);
+    _derniereErreurIdb = '';
+    return true;
+  } catch (e) {
+    noterErreurIdb(e);
+    return false;
+  }
 }
 
 async function idbGetSilencieux(store, cle) {
-  try { return await idbGet(store, cle); } catch (e) { return undefined; }
+  try { return await idbGet(store, cle); } catch (e) { noterErreurIdb(e); return undefined; }
 }
 
 async function idbGetAllSilencieux(store) {

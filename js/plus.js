@@ -3,6 +3,16 @@ function init() {
   enregistrerServiceWorker();
   demarrerVerifications();
   document.getElementById('version-app').textContent = `Version de l’app : ${VERSION_APP}`;
+  // Une ecriture d'essai, a part des donnees, pour voir l'etat reel du stockage.
+  obtenirInstantane()
+    .then(() => idbPutSilencieux('cache', { cle: 'essai_stockage', valeur: Date.now() }))
+    .then((ok) => {
+      const etat = etatStockage();
+      const ligne = document.getElementById('etat-stockage');
+      if (etat.niveau === 'panne') ligne.textContent = `Enregistrement en panne. Code : ${etat.code}`;
+      else if (!ok) ligne.textContent = `Enregistrement de secours actif. Code : ${derniereErreurIdb()}`;
+      else ligne.textContent = 'Enregistrement : OK';
+    });
 
   const derniere = lireDerniereSauvegarde();
   const jours = derniere ? joursDepuis(derniere) : null;

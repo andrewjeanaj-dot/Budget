@@ -37,6 +37,10 @@ function afficherToast(texte, action) {
   toast._timeout = setTimeout(() => toast.classList.remove('visible'), action ? 6000 : 1800);
 }
 
+// Retour en arriere sur iPhone : la page revient telle quelle, avec des donnees
+// peut-etre anciennes. Une saisie faite dessus ecraserait les plus recentes.
+window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
+
 // Quelque chose est-il en cours de saisie ? Recharger le ferait perdre.
 function saisieEnCours() {
   if (document.querySelector('dialog[open]')) return true;

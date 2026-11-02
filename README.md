@@ -41,8 +41,9 @@ gauche de l'accueil.
 - HTML/CSS/JavaScript sans framework ni étape de build. Hébergement statique
   (GitHub Pages).
 - Données : un seul objet (« instantané ») stocké dans IndexedDB
-  (`js/db.js`, `js/local.js`). Tous les totaux sont recalculés dans le
-  téléphone (`calculerMois`).
+  (`js/db.js`, `js/local.js`), avec une copie de secours dans localStorage : la
+  plus récente des deux est relue. Tous les totaux sont recalculés dans le
+  téléphone (`calculerMois`). L'état du stockage s'affiche en bas de « Plus ».
 - Premier lancement : si rien n'est enregistré, l'app propose les
   `CATEGORIES_STANDARD` (`js/local.js`). Elles ne sont écrites qu'à la première
   modification, et n'arrivent jamais sur un téléphone qui a déjà des données.
