@@ -269,6 +269,7 @@ function rendreBienvenue(snap) {
 
 const CLE_RAPPEL_REPORTE = 'budget_rappel_reporte';
 const JOURS_REPORT_RAPPEL = 3;
+const JOURS_REPORT_FIN_DE_MOIS = 1;   // la periode est courte : on repropose demain
 
 function rappelReporte() {
   try {
@@ -277,8 +278,8 @@ function rappelReporte() {
   } catch (e) { return false; }
 }
 
-// Le telephone exige un geste pour creer un fichier : on le propose au bon
-// moment, sans rien demander tant qu'une copie recente existe.
+// Le telephone exige un geste pour creer un fichier : on le propose a chaque
+// fin de mois, ou si aucune copie n'existe encore.
 async function rendreRappelSauvegarde(snap) {
   const zone = document.getElementById('rappel-sauvegarde');
   const aDesMouvements = [snap.depenses, snap.revenus].some((parMois) => Object.values(parMois || {}).some((liste) => liste.length > 0));
@@ -290,13 +291,19 @@ async function rendreRappelSauvegarde(snap) {
       el('a', { class: 'bouton-principal', href: 'coffre.html', style: { display: 'block', textAlign: 'center', textDecoration: 'none' } }, 'Réparer')));
     return;
   }
-  const derniere = etat && etat.code ? etat.derniere_copie : lireDerniereSauvegarde();
+  const auto = !!(etat && etat.code);
+  const derniere = auto ? etat.derniere_copie : lireDerniereSauvegarde();
   const jours = derniere ? joursDepuis(derniere) : null;
-  const aJour = etat && etat.code ? (jours === null || jours < JOURS_AVANT_RAPPEL) : (jours !== null && jours < JOURS_AVANT_RAPPEL);
-  if (!aDesMouvements || aJour || rappelReporte()) { zone.replaceChildren(); return; }
+  const finDeMois = !auto && sauvegardeFinDeMoisAFaire(derniere);
+  const aFaire = auto
+    ? jours !== null && jours >= JOURS_AVANT_RAPPEL
+    : jours === null || jours >= JOURS_AVANT_RAPPEL_FICHIER || finDeMois;
+  if (!aDesMouvements || !aFaire || rappelReporte()) { zone.replaceChildren(); return; }
+  const depuis = jours === null ? 'Aucune copie de tes données n’existe hors de ce téléphone.' : `Ta dernière copie date de ${jours} jours.`;
+  const reportJours = finDeMois ? JOURS_REPORT_FIN_DE_MOIS : JOURS_REPORT_RAPPEL;
   zone.replaceChildren(el('section', { class: 'carte guide' },
-    el('h3', {}, '🔒 Mets tes données à l’abri'),
-    el('p', {}, jours === null ? 'Aucune copie de tes données n’existe hors de ce téléphone.' : `Ta dernière copie date de ${jours} jours.`),
+    el('h3', {}, finDeMois ? '🔒 Fin de mois : enregistre ta sauvegarde' : '🔒 Mets tes données à l’abri'),
+    el('p', {}, depuis),
     el('button', { type: 'button', class: 'bouton-principal', id: 'rappel-sauvegarder', onclick: async () => {
       if (!(await creerFichierSauvegarde())) return;
       afficherToast('Sauvegarde créée ✓');
@@ -305,7 +312,7 @@ async function rendreRappelSauvegarde(snap) {
     } }, 'Sauvegarder maintenant'),
     el('p', { style: { marginTop: '8px' } }, 'Sur iPhone, choisis ensuite « Enregistrer dans Fichiers », puis iCloud Drive.'),
     el('button', { type: 'button', class: 'bouton-secondaire', id: 'rappel-plus-tard', onclick: () => {
-      try { localStorage.setItem(CLE_RAPPEL_REPORTE, new Date(Date.now() + JOURS_REPORT_RAPPEL * 86400000).toISOString()); } catch (e) { /* sans effet */ }
+      try { localStorage.setItem(CLE_RAPPEL_REPORTE, new Date(Date.now() + reportJours * 86400000).toISOString()); } catch (e) { /* sans effet */ }
       zone.replaceChildren();
     } }, 'Plus tard')));
 }

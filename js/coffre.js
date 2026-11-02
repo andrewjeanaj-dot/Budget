@@ -293,6 +293,25 @@ async function partagerFichier(fichier) {
   return true;
 }
 
+// Fin de mois : du 3e jour avant la fin au 3 du mois suivant, pour rattraper
+// un mois ou l'app n'a pas ete ouverte a temps. Renvoie le debut de cette
+// periode, ou null en dehors.
+function debutFinDeMois(maintenant) {
+  const a = maintenant.getFullYear();
+  const m = maintenant.getMonth();
+  const j = maintenant.getDate();
+  const dernier = new Date(a, m + 1, 0).getDate();
+  if (j >= dernier - 2) return new Date(a, m, dernier - 2);
+  if (j <= 3) return new Date(a, m - 1, new Date(a, m, 0).getDate() - 2);
+  return null;
+}
+
+// Vrai si c'est la fin du mois et qu'aucune copie n'a ete faite depuis son debut.
+function sauvegardeFinDeMoisAFaire(derniereIso, maintenant = new Date()) {
+  const debut = debutFinDeMois(maintenant);
+  return !!debut && (!derniereIso || new Date(derniereIso) < debut);
+}
+
 async function creerFichierSauvegarde() {
   const snap = await obtenirInstantane();
   const contenu = JSON.stringify({ format: FORMAT_SAUVEGARDE, version: 1, exporte_le: nowIso(), donnees: snap });

@@ -11,7 +11,7 @@ function init() {
   document.getElementById('nouvelle-libelle').addEventListener('keydown', (e) => { if (e.key === 'Enter') ajouterCategorie(); });
   document.getElementById('nouvelle-prevision').addEventListener('input', (e) => {
     const chiffres = e.target.value.replace(/[^0-9]/g, '');
-    e.target.value = chiffres ? Number(chiffres).toLocaleString('fr-FR') : '';
+    e.target.value = chiffres ? formatNombre(Number(chiffres)) : '';
   });
   charger();
 }

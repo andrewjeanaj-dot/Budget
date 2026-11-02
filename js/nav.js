@@ -52,7 +52,8 @@ function enregistrerServiceWorker() {
 // page rappelle depuis quand la derniere sauvegarde fichier a ete faite.
 
 const CLE_DERNIERE_SAUVEGARDE = 'budget_derniere_sauvegarde';
-const JOURS_AVANT_RAPPEL = 7;
+const JOURS_AVANT_RAPPEL = 7;          // sauvegarde auto : au-dela, elle a un souci
+const JOURS_AVANT_RAPPEL_FICHIER = 31; // fichier : le rappel passe en fin de mois
 
 function lireDerniereSauvegarde() {
   try { return localStorage.getItem(CLE_DERNIERE_SAUVEGARDE); } catch (e) { return null; }
@@ -90,7 +91,7 @@ async function majStatutSauvegarde() {
     texte = coffreActif ? 'Copie en attente' : 'Jamais sauvegardé'; alerte = true;
   } else {
     texte = jours === 0 ? 'Sauvegardé aujourd’hui' : `Sauvegarde : il y a ${jours} j`;
-    alerte = jours >= JOURS_AVANT_RAPPEL;
+    alerte = jours >= (coffreActif ? JOURS_AVANT_RAPPEL : JOURS_AVANT_RAPPEL_FICHIER);
   }
   badge.textContent = texte;
   badge.classList.toggle('visible', alerte);

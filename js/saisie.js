@@ -261,7 +261,7 @@ function monterSaisie(racine) {
   champMontant.addEventListener('input', () => {
     // Affiche « 4 520 » au fil de la frappe : plus lisible, moins d'erreurs.
     const chiffres = champMontant.value.replace(/[^0-9]/g, '');
-    champMontant.value = chiffres ? Number(chiffres).toLocaleString('fr-FR') : '';
+    champMontant.value = chiffres ? formatNombre(Number(chiffres)) : '';
     majBouton();
   });
   champMontant.addEventListener('keydown', (e) => { if (e.key === 'Enter') enregistrer(); });

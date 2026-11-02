@@ -8,8 +8,8 @@ quelques secondes, directement à la caisse, depuis son téléphone.
   dépôt GitHub privé de l'utilisateur.
 - **Marche hors ligne** une fois installée sur l'écran d'accueil.
 - **Sauvegarde par fichier** (Plus › Fichier de sauvegarde et export) : à ranger
-  dans iCloud Drive, OneDrive ou Google Drive. L'accueil la propose quand la
-  dernière copie date de plus de 7 jours.
+  dans iCloud Drive, OneDrive ou Google Drive. L'accueil la propose à chaque
+  fin de mois, à l'ouverture de l'app.
 - **Tableau de bord** : revenus, dépenses et « Il te reste » du mois (l'argent
   réel du moment), encore prévu et fin de mois prévue, dépenses par catégorie, 6 derniers
   mois, budgets par catégorie qui passent au rouge en cas de dépassement.

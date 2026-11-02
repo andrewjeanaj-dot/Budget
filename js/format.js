@@ -60,9 +60,15 @@ function lireMontant(texte) {
   return chiffres ? parseInt(chiffres, 10) : 0;
 }
 
+// « 12 000 » avec une vraie espace : celle du navigateur, trop fine, colle les
+// chiffres a l'ecran. Insecable, pour ne jamais couper un montant en deux.
+function formatNombre(n) {
+  return n.toLocaleString('fr-FR').replace(/\s/g, ' ');
+}
+
 function formatXPF(montant) {
   const n = Math.round(montant || 0);
-  return n.toLocaleString('fr-FR') + ' F';
+  return formatNombre(n) + ' F';
 }
 
 function moisLabel(moisStr) {

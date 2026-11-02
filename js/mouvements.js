@@ -82,10 +82,10 @@ function monterMouvements(racine, lireMois) {
     const snap = await obtenirInstantane();
     const estDepense = m.sorte === 'depense';
     const erreur = el('p', { class: 'form-err', role: 'alert' });
-    const montant = el('input', { class: 'champ champ-montant-fiche', id: 'edit-montant', inputmode: 'numeric', autocomplete: 'off', value: m.montant.toLocaleString('fr-FR') });
+    const montant = el('input', { class: 'champ champ-montant-fiche', id: 'edit-montant', inputmode: 'numeric', autocomplete: 'off', value: formatNombre(m.montant) });
     montant.addEventListener('input', () => {
       const chiffres = montant.value.replace(/[^0-9]/g, '');
-      montant.value = chiffres ? Number(chiffres).toLocaleString('fr-FR') : '';
+      montant.value = chiffres ? formatNombre(Number(chiffres)) : '';
     });
     const date = el('input', { class: 'champ', id: 'edit-date', type: 'date', value: m.sansDate ? '' : m.date });
     const note = el('input', { class: 'champ', id: 'edit-note', maxlength: '120', value: m.note, placeholder: 'Note (optionnel)' });
