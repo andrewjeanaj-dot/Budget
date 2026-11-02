@@ -2,6 +2,7 @@ function init() {
   injecterNav('plus');
   enregistrerServiceWorker();
   demarrerVerifications();
+  document.getElementById('version-app').textContent = `Version de l’app : ${VERSION_APP}`;
 
   const derniere = lireDerniereSauvegarde();
   const jours = derniere ? joursDepuis(derniere) : null;

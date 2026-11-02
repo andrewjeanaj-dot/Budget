@@ -37,8 +37,26 @@ function afficherToast(texte, action) {
   toast._timeout = setTimeout(() => toast.classList.remove('visible'), action ? 6000 : 1800);
 }
 
+// Quelque chose est-il en cours de saisie ? Recharger le ferait perdre.
+function saisieEnCours() {
+  if (document.querySelector('dialog[open]')) return true;
+  return [...document.querySelectorAll('input:not([type=checkbox]):not([type=date]):not([type=file]), textarea')]
+    .some((c) => c.value !== c.defaultValue);
+}
+
 function enregistrerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
+  // Une nouvelle version vient de s'installer : on l'affiche tout de suite, sinon
+  // l'ecran reste sur l'ancienne jusqu'a la prochaine fermeture de l'app. Pas de
+  // rechargement a la premiere installation, ni au milieu d'une saisie.
+  const dejaInstallee = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!dejaInstallee) return;
+    if (!saisieEnCours()) { location.reload(); return; }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && !saisieEnCours()) location.reload();
+    });
+  });
   // updateViaCache:'none' : le script du service worker lui-meme ne doit
   // jamais venir du cache HTTP, sinon une correction peut ne jamais
   // atteindre le telephone.

@@ -1,3 +1,7 @@
+// A changer en meme temps que VERSION dans service-worker.js : affichee dans
+// « Plus », elle dit quelle version tourne vraiment sur le telephone.
+const VERSION_APP = 'v16';
+
 const GROUPES = [
   { id: 'essentielles', label: 'Essentielles', couleur: '#3987e5' },
   { id: 'loisirs', label: 'Loisirs', couleur: '#d55181' },

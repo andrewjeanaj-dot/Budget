@@ -656,7 +656,7 @@ body.avec-barre-action .toast { bottom: calc(150px + env(safe-area-inset-bottom)
 }
 .chiffre-cle .libelle { font-size: 0.82rem; color: var(--texte-2); display: flex; align-items: center; gap: 7px; white-space: nowrap; }
 .chiffre-cle .libelle i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-.chiffre-cle .valeur { font-size: clamp(1.25rem, 14cqi, 1.9rem); font-weight: 650; letter-spacing: -0.01em; word-spacing: 0.12em; white-space: nowrap; }
+.chiffre-cle .valeur { font-size: clamp(1.25rem, 14cqi, 1.9rem); font-weight: 650; letter-spacing: 0; word-spacing: 0.2em; white-space: nowrap; }
 .chiffre-cle .sous { font-size: 0.78rem; color: var(--texte-att); }
 .chiffre-cle.heros {
   background: linear-gradient(140deg, #ff9a4d, #ff7a1a 45%, #f0600f);
@@ -666,7 +666,7 @@ body.avec-barre-action .toast { bottom: calc(150px + env(safe-area-inset-bottom)
 }
 .chiffre-cle.heros .libelle { color: rgba(26, 13, 2, 0.8); font-weight: 600; }
 .chiffre-cle.heros .sous { color: rgba(26, 13, 2, 0.75); }
-.chiffre-cle.heros .valeur { font-size: clamp(1.9rem, 15cqi, 3.1rem); letter-spacing: -0.01em; word-spacing: 0.12em; line-height: 1.1; }
+.chiffre-cle.heros .valeur { font-size: clamp(1.9rem, 15cqi, 3.1rem); letter-spacing: 0; word-spacing: 0.2em; line-height: 1.1; }
 .chiffre-cle.heros.negatif { background: linear-gradient(140deg, #f26168, #d8383f); }
 @container (max-width: 640px) {
   .chiffres-cles { grid-template-columns: 1fr 1fr; }
