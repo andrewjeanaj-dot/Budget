@@ -1,4 +1,4 @@
-# Budget
+# Gestion de mes finances
 
 Application gratuite de suivi de budget, pensée pour noter une dépense en
 quelques secondes, directement à la caisse, depuis son téléphone.

@@ -1,6 +1,6 @@
 {
-  "name": "Budget",
-  "short_name": "Budget",
+  "name": "Gestion de mes finances",
+  "short_name": "Mes finances",
   "lang": "fr",
   "start_url": "index.html",
   "scope": "./",

@@ -1,6 +1,6 @@
 // A incrementer apres TOUTE modification d'un fichier de l'app, sinon les
 // telephones gardent l'ancienne version en cache.
-const VERSION = 'v16';
+const VERSION = 'v17';
 const CACHE_STATIQUE = `budget-statique-${VERSION}`;
 
 const FICHIERS_A_METTRE_EN_CACHE = [
@@ -10,7 +10,7 @@ const FICHIERS_A_METTRE_EN_CACHE = [
   'js/graphique.js', 'js/saisie.js', 'js/budget.js', 'js/tendance.js', 'js/categories.js',
   'js/epargne.js', 'js/sauvegarde.js', 'js/plus.js', 'js/guide.js',
   'js/mouvements.js', 'js/accueil.js', 'js/page-ajout.js', 'js/page-mouvements.js',
-  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
+  'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
