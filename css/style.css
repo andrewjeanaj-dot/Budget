@@ -665,7 +665,7 @@ body.avec-barre-action .toast { bottom: calc(150px + env(safe-area-inset-bottom)
 .chiffre-cle.heros.negatif { background: linear-gradient(140deg, #f26168, #d8383f); }
 @container (max-width: 640px) {
   .chiffres-cles { grid-template-columns: 1fr 1fr; }
-  .chiffre-cle.heros { grid-column: 1 / -1; order: -1; }
+  .chiffre-cle.heros { grid-column: 1 / -1; }
 }
 
 .entete-carte { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }

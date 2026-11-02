@@ -62,19 +62,18 @@ function rendreChiffres(calc, snap) {
   document.getElementById('k-depenses').textContent = formatXPF(calc.total_reel);
   document.getElementById('k-depenses-sous').textContent = nDep ? `${nDep} dépense${nDep > 1 ? 's' : ''}` : 'Aucune dépense';
 
-  // Le grand chiffre met de cote tout ce qui est encore prevu au budget. Un mois
-  // passe est clos : plus rien a reserver, seul compte l'argent reellement reste.
+  // Le grand chiffre : l'argent reel d'aujourd'hui. Le prevu reste a part, en
+  // dessous. Un mois passe est clos : plus rien n'est prevu.
   const signe = (v) => (v < 0 ? '−' : '') + formatXPF(Math.abs(v));
   const { encorePrevu, fin } = finDeMoisPrevue(calc);
   const moisClos = moisAffiche < moisCourant();
-  const reste = moisClos ? calc.solde_a_reporter : fin;
+  const reste = calc.solde_a_reporter;
   document.getElementById('k-reste').textContent = signe(reste);
   document.getElementById('k-heros').classList.toggle('negatif', reste < 0);
-  let sousTexte;
-  if (!calc.total_revenus && !calc.total_reel && !calc.solde_depart && !encorePrevu) sousTexte = 'Rien de saisi pour ce mois';
-  else if (moisClos || encorePrevu === 0) sousTexte = 'Argent du mois moins les dépenses';
-  else sousTexte = `${fin < 0 ? 'Attention : ' : ''}${formatXPF(encorePrevu)} encore prévus au budget mis de côté. Sans les réserver : ${signe(calc.solde_a_reporter)}`;
-  document.getElementById('k-reste-sous').textContent = sousTexte;
+  const sous = document.getElementById('k-reste-sous');
+  if (!calc.total_revenus && !calc.total_reel && !calc.solde_depart && !encorePrevu) sous.textContent = 'Rien de saisi pour ce mois';
+  else if (moisClos || encorePrevu === 0) sous.textContent = 'Argent du mois moins les dépenses';
+  else sous.replaceChildren(el('div', {}, `Encore prévu : ${formatXPF(encorePrevu)}`), el('div', {}, `Fin de mois prévue : ${signe(fin)}`));
 }
 
 // ─── Anneau des depenses par categorie ─────────────────────────────────────

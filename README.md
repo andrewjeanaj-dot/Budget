@@ -9,8 +9,8 @@ quelques secondes, directement à la caisse, depuis son téléphone.
 - **Sauvegarde par fichier** (Plus › Sauvegarde et export) : à ranger dans
   iCloud Drive, OneDrive ou Google Drive. C'est la seule façon de retrouver
   ses données en cas de perte ou de changement de téléphone.
-- **Tableau de bord** : revenus, dépenses et « Il te reste » du mois, une fois
-  mis de côté tout ce qui est encore prévu au budget, dépenses par catégorie, 6 derniers
+- **Tableau de bord** : revenus, dépenses et « Il te reste » du mois (l'argent
+  réel du moment), encore prévu et fin de mois prévue, dépenses par catégorie, 6 derniers
   mois, budgets par catégorie qui passent au rouge en cas de dépassement.
 - **Export CSV pour Excel** de tous les mouvements.
 
