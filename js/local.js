@@ -47,8 +47,32 @@ function instantanePremierLancement() {
   return snap;
 }
 
-// Copie de secours dans le telephone, dans un second stockage : si le principal
-// refuse une ecriture, la saisie n'est pas perdue.
+// Copies de secours dans le telephone, dans deux autres stockages du navigateur :
+// si l'un refuse une ecriture, sur n'importe quelle version, la saisie reste
+// ailleurs. A la lecture, la copie la plus recente gagne.
+const CACHE_DONNEES = 'budget-donnees';
+const ADRESSE_DONNEES = 'budget-donnees.json';
+
+async function lireCacheDonnees() {
+  try {
+    const cache = await caches.open(CACHE_DONNEES);
+    const reponse = await cache.match(ADRESSE_DONNEES);
+    return reponse ? await reponse.json() : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function ecrireCacheDonnees(valeur, ecritLe) {
+  try {
+    const cache = await caches.open(CACHE_DONNEES);
+    await cache.put(ADRESSE_DONNEES, new Response(JSON.stringify({ ecrit_le: ecritLe, valeur }), { headers: { 'Content-Type': 'application/json' } }));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function lireMiroir() {
   try {
     const brut = localStorage.getItem(CLE_MIROIR);
@@ -77,31 +101,53 @@ async function lireStockagePrincipal() {
   return idbGet('cache', CLE_INSTANTANE);
 }
 
+// A-t-on deja utilise l'app sur ce telephone ? Si le stockage principal est
+// illisible, c'est ce qui distingue un nouvel utilisateur d'une vraie panne.
+function dejaUtilisee() {
+  try {
+    return !!(localStorage.getItem('budget_device_id') || localStorage.getItem('budget_derniere_sauvegarde'));
+  } catch (e) {
+    return false;
+  }
+}
+
 async function obtenirInstantane() {
   if (_instantane) return _instantane;
-  const miroir = lireMiroir();
+  const secours = [lireMiroir(), await lireCacheDonnees()].filter((c) => c && c.valeur)
+    .sort((a, b) => (b.ecrit_le || 0) - (a.ecrit_le || 0))[0];
   // Un telephone qui n'a encore rien enregistre recoit les categories standards.
-  // Une lecture en echec ne doit surtout pas passer pour un premier lancement :
-  // la moindre saisie ecraserait alors les vraies donnees avec ces categories.
+  // Une lecture en echec chez quelqu'un qui a deja des donnees ne doit surtout pas
+  // passer pour un premier lancement : une saisie les ecraserait.
   try {
     const enCache = await lireStockagePrincipal();
     _lectureEnEchec = false;
-    if (miroir && miroir.valeur && (!enCache || miroir.ecrit_le > (enCache.ecrit_le || 0))) {
-      _instantane = miroir.valeur;   // le principal avait refuse la derniere ecriture
+    if (secours && (!enCache || secours.ecrit_le > (enCache.ecrit_le || 0))) {
+      _instantane = secours.valeur;   // le principal avait refuse la derniere ecriture
     } else {
       _instantane = enCache ? (enCache.valeur || instantaneVide()) : instantanePremierLancement();
+      // Donnees d'avant les copies de secours : on les protege des maintenant.
+      if (enCache && enCache.valeur && !secours) {
+        ecrireMiroir(enCache.valeur, enCache.ecrit_le || 0);
+        ecrireCacheDonnees(enCache.valeur, enCache.ecrit_le || 0);
+      }
     }
   } catch (e) {
     noterErreurIdb(e);
-    _lectureEnEchec = !(miroir && miroir.valeur);
-    _instantane = miroir && miroir.valeur ? miroir.valeur : instantaneVide();
+    if (secours) {
+      _instantane = secours.valeur;
+    } else if (dejaUtilisee()) {
+      _lectureEnEchec = true;
+      _instantane = instantaneVide();
+    } else {
+      _instantane = instantanePremierLancement();
+    }
   }
   return _instantane;
 }
 
-// Ecrit l'instantane dans le telephone. Renvoie false si rien n'a pu etre ecrit :
-// l'appelant doit le signaler. Sans lecture fiable, on n'ecrit rien : une app
-// affichee vide ne doit jamais remplacer les vraies donnees.
+// Ecrit l'instantane partout ou le telephone l'accepte. Renvoie false si rien n'a
+// pu etre ecrit : l'appelant doit le signaler. Sans lecture fiable, on n'ecrit
+// rien : une app affichee vide ne doit jamais remplacer les vraies donnees.
 async function definirInstantane(snap) {
   _instantane = snap;
   if (_lectureEnEchec) {
@@ -109,8 +155,11 @@ async function definirInstantane(snap) {
     return false;
   }
   const ecritLe = Date.now();
-  const okPrincipal = await idbPutSilencieux('cache', { cle: CLE_INSTANTANE, valeur: snap, ecrit_le: ecritLe });
-  const okSecours = ecrireMiroir(snap, ecritLe);
+  const [okPrincipal, okCache] = await Promise.all([
+    idbPutSilencieux('cache', { cle: CLE_INSTANTANE, valeur: snap, ecrit_le: ecritLe }),
+    ecrireCacheDonnees(snap, ecritLe),
+  ]);
+  const okSecours = ecrireMiroir(snap, ecritLe) || okCache;
   const ok = okPrincipal || okSecours;
   _stockageEnEchec = !ok;
   _secoursActif = !okPrincipal && okSecours;
@@ -125,9 +174,10 @@ function etatStockage() {
   return { niveau: 'ok', code: '' };
 }
 
-// Remet a zero toutes les copies gardees dans le telephone (essais, restauration).
-function oublierCopieSecours() {
+// Remet a zero les copies de secours (essais).
+async function oublierCopieSecours() {
   try { localStorage.removeItem(CLE_MIROIR); } catch (e) { /* sans effet */ }
+  try { await caches.delete(CACHE_DONNEES); } catch (e) { /* sans effet */ }
 }
 
 const FORMAT_SAUVEGARDE = 'budget-app';
@@ -438,13 +488,17 @@ function appliquerLocalement(snap, type, p) {
 // modification et l'enregistre aussitot dans le telephone.
 async function enfilerOperation(type, payload) {
   const snap = await obtenirInstantane();
+  const avant = JSON.stringify(snap);
   appliquerLocalement(snap, type, payload);
   const ok = await definirInstantane(snap);
   if (!ok) {
-    alert('Attention : le téléphone n’a pas pu enregistrer cette modification.\n\n'
-      + 'Elle sera perdue à la fermeture de l’app. Ferme complètement l’app, rouvre-la '
-      + 'et réessaie. Vérifie aussi qu’il reste de la place sur le téléphone.\n\n'
+    // Retour a l'etat d'avant : un nouvel essai ne doit pas compter la saisie deux fois.
+    _instantane = JSON.parse(avant);
+    alert('Attention : cette saisie n’a pas pu être enregistrée.\n\n'
+      + 'Elle n’est pas comptée. Ferme complètement l’app, rouvre-la et réessaie. '
+      + 'Vérifie aussi qu’il reste de la place sur le téléphone.\n\n'
       + `Code à transmettre : ${etatStockage().code}`);
+    return { ok };
   }
   // Sur ordinateur, l'accueil affiche saisie, tableau et liste ensemble :
   // chacun se redessine quand les donnees changent.

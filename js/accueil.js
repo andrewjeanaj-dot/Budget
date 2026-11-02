@@ -212,7 +212,7 @@ function rendreBudgets(calc, parId) {
   const lignes = calc.lignes
     .filter((l) => l.prevision > 0 || l.reel > 0)
     .map((l) => ({ ...l, cat: parId[l.categorie_id] }))
-    .sort((a, b) => (ordreGroupe[(a.cat || {}).groupe] ?? 9) - (ordreGroupe[(b.cat || {}).groupe] ?? 9));
+    .sort((a, b) => ordreGroupe[(a.cat || {}).groupe] - ordreGroupe[(b.cat || {}).groupe]);
   document.getElementById('budgets-sous').textContent = calc.total_prevu
     ? `${formatXPF(calc.total_reel)} dépensés sur ${formatXPF(calc.total_prevu)} prévus · remis à zéro chaque mois`
     : 'Aucune prévision pour ce mois';
@@ -263,6 +263,34 @@ function rendreBienvenue(snap) {
       try { localStorage.setItem(CLE_BIENVENUE_VUE, '1'); } catch (e) { /* sans effet */ }
       zone.replaceChildren();
     } }, 'Compris')));
+}
+
+// ─── App non installee ─────────────────────────────────────────────────────
+
+const CLE_INSTALLATION_REPORTEE = 'budget_installation_reportee';
+
+function appInstallee() {
+  return navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+}
+
+// Dans un navigateur ou une messagerie, le telephone peut effacer les donnees
+// tout seul : c'est aussi une cause de saisies perdues, sur tous les telephones.
+function rendreInstallation() {
+  const zone = document.getElementById('installer-app');
+  let reportee = false;
+  try {
+    const jusqua = localStorage.getItem(CLE_INSTALLATION_REPORTEE);
+    reportee = !!jusqua && new Date(jusqua).getTime() > Date.now();
+  } catch (e) { /* sans effet */ }
+  if (appInstallee() || !window.matchMedia('(pointer: coarse)').matches || reportee) { zone.replaceChildren(); return; }
+  zone.replaceChildren(el('section', { class: 'carte guide' },
+    el('h3', {}, '⚠️ L’app n’est pas installée'),
+    el('p', {}, 'Dans un navigateur ou une messagerie, tes données peuvent s’effacer toutes seules. Installe l’app sur ton écran d’accueil, puis ouvre-la depuis son icône.'),
+    el('a', { class: 'bouton-principal', href: 'guide.html', style: { display: 'block', textAlign: 'center', textDecoration: 'none' } }, 'Voir comment faire'),
+    el('button', { type: 'button', class: 'bouton-secondaire', id: 'installer-plus-tard', onclick: () => {
+      try { localStorage.setItem(CLE_INSTALLATION_REPORTEE, new Date(Date.now() + 7 * 86400000).toISOString()); } catch (e) { /* sans effet */ }
+      zone.replaceChildren();
+    } }, 'Plus tard')));
 }
 
 // ─── Rappel de sauvegarde ──────────────────────────────────────────────────
@@ -326,6 +354,7 @@ async function rendreTableau() {
   assurerMois(snap, moisAffiche);
   const calc = calculerMois(snap, moisAffiche);
   const parId = categoriesParId(snap.categories || []);
+  rendreInstallation();
   rendreBienvenue(snap);
   rendreRappelSauvegarde(snap);
   rendreChiffres(calc, snap);

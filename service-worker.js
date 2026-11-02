@@ -1,6 +1,6 @@
 // A incrementer apres TOUTE modification d'un fichier de l'app, sinon les
 // telephones gardent l'ancienne version en cache.
-const VERSION = 'v18';
+const VERSION = 'v19';
 const CACHE_STATIQUE = `budget-statique-${VERSION}`;
 
 const FICHIERS_A_METTRE_EN_CACHE = [
@@ -28,7 +28,8 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((noms) => Promise.all(
-        noms.filter((n) => n !== CACHE_STATIQUE).map((n) => caches.delete(n))
+        // budget-donnees : la copie de secours des donnees, jamais a effacer.
+        noms.filter((n) => n !== CACHE_STATIQUE && n !== 'budget-donnees').map((n) => caches.delete(n))
       ))
       .then(() => self.clients.claim())
   );
