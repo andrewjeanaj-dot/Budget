@@ -240,6 +240,32 @@ function rendreBudgets(calc, parId) {
   })));
 }
 
+// ─── Bienvenue ─────────────────────────────────────────────────────────────
+
+const CLE_BIENVENUE_VUE = 'budget_bienvenue_vue';
+
+function bienvenueVue() {
+  try { return !!localStorage.getItem(CLE_BIENVENUE_VUE); } catch (e) { return false; }
+}
+
+// Tant que rien n'est saisi : disparait au premier mouvement ou sur « Compris ».
+function rendreBienvenue(snap) {
+  const zone = document.getElementById('bienvenue');
+  const aDesMouvements = [snap.depenses, snap.revenus].some((parMois) => Object.values(parMois || {}).some((liste) => liste.length > 0));
+  if (aDesMouvements || bienvenueVue()) { zone.replaceChildren(); return; }
+  zone.replaceChildren(el('section', { class: 'carte guide', 'aria-labelledby': 't-bienvenue' },
+    el('h3', { id: 't-bienvenue' }, 'Bienvenue 👋'),
+    el('ol', {},
+      el('li', {}, 'Note ton revenu avec le +.'),
+      el('li', {}, 'Fixe tes prévisions dans Plus › Catégories et prévisions.'),
+      el('li', {}, 'Sauvegarde chaque semaine : tes données sont seulement dans ce téléphone.')),
+    el('a', { class: 'bouton-principal', href: 'guide.html', style: { display: 'block', textAlign: 'center', textDecoration: 'none' } }, 'Lire le mode d’emploi'),
+    el('button', { type: 'button', class: 'bouton-secondaire', id: 'bienvenue-compris', onclick: () => {
+      try { localStorage.setItem(CLE_BIENVENUE_VUE, '1'); } catch (e) { /* sans effet */ }
+      zone.replaceChildren();
+    } }, 'Compris')));
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 async function rendreTableau() {
@@ -249,6 +275,7 @@ async function rendreTableau() {
   assurerMois(snap, moisAffiche);
   const calc = calculerMois(snap, moisAffiche);
   const parId = categoriesParId(snap.categories || []);
+  rendreBienvenue(snap);
   rendreChiffres(calc, snap);
   rendreAnneau(calc, parId);
   rendreBarres(snap);

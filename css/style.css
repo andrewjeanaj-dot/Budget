@@ -110,6 +110,12 @@ header.entete h1 .retour {
 }
 h3 { font-size: 1.02rem; font-weight: 600; }
 
+.guide h3 { margin-top: 0; }
+.guide p, .guide li { font-size: 0.92rem; line-height: 1.5; }
+.guide ol { padding-left: 20px; margin: 8px 0; }
+.guide li { margin-bottom: 6px; }
+.guide-exemple { background: var(--accent-fond); border-radius: 12px; padding: 10px 12px; }
+
 .vide {
   text-align: center;
   color: var(--texte-att);

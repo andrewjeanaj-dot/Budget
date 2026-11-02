@@ -22,7 +22,7 @@ quelques secondes, directement à la caisse, depuis son téléphone.
 | Mouvements | `mouvements.html` | Dépenses et revenus du mois, filtre, suppression avec « Annuler ». |
 | + | `ajout.html` | Saisie d'une dépense (catégorie, moyen de paiement) ou d'un revenu. |
 | Budget | `budget.html` | Prévu / réel par catégorie, report, revenus du mois. |
-| Plus | `plus.html` | Catégories, Épargne, Tendance, Sauvegarde et export. |
+| Plus | `plus.html` | Mode d'emploi (`guide.html`), Catégories, Épargne, Tendance, Sauvegarde et export. |
 
 La saisie (`js/saisie.js`) et la liste (`js/mouvements.js`) sont des composants
 montés dans un conteneur : la même saisie sert à `ajout.html` et à la colonne
@@ -42,6 +42,9 @@ gauche de l'accueil.
 - Données : un seul objet (« instantané ») stocké dans IndexedDB
   (`js/db.js`, `js/local.js`). Tous les totaux sont recalculés dans le
   téléphone (`calculerMois`).
+- Premier lancement : si rien n'est enregistré, l'app propose les
+  `CATEGORIES_STANDARD` (`js/local.js`). Elles ne sont écrites qu'à la première
+  modification, et n'arrivent jamais sur un téléphone qui a déjà des données.
 - Hors ligne : `service-worker.js` met tous les fichiers en cache.
   **Après toute modification d'un fichier, incrémenter `VERSION` dans
   `service-worker.js`**, sinon les téléphones gardent l'ancienne version.

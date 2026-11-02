@@ -1,0 +1,89 @@
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget — Mode d’emploi</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+
+<header class="entete">
+  <h1><a class="retour" href="plus.html" aria-label="Retour">‹</a>Mode d’emploi</h1>
+  <span class="statut-hors-ligne"></span>
+</header>
+
+<div class="page guide">
+  <section class="carte">
+    <h3>Installer l’app</h3>
+    <p><b>Sur iPhone :</b> ouvre le lien dans Safari, touche Partager, puis « Sur l’écran d’accueil ».</p>
+    <p><b>Sur Android :</b> ouvre le lien dans Chrome, touche ⋮, puis « Installer l’application » ou « Ajouter à l’écran d’accueil ».</p>
+    <p>Ouvre ensuite toujours l’app depuis son icône. Le navigateur et l’icône ne partagent pas les mêmes données.</p>
+  </section>
+
+  <section class="carte">
+    <h3>Démarrer en 3 gestes</h3>
+    <ol>
+      <li><b>Note ton revenu :</b> touche le +, choisis « Revenu », tape le montant, choisis « Salaire », puis enregistre.</li>
+      <li><b>Fixe tes prévisions :</b> dans Plus › Catégories et prévisions, tape ce que tu prévois pour chaque poste. Des catégories sont déjà prêtes : renomme, supprime ou crée les tiennes.</li>
+      <li><b>Indique ton point de départ :</b> dans Budget › Le détail du mois, touche « Corriger le report du mois dernier » et tape ce qu’il te restait. Avec un signe moins si c’est négatif.</li>
+    </ol>
+  </section>
+
+  <section class="carte">
+    <h3>Noter une dépense</h3>
+    <ol>
+      <li>Touche le +.</li>
+      <li>Tape le montant et choisis la catégorie.</li>
+      <li>Choisis comment tu as payé : carte, espèces ou virement.</li>
+      <li>Si l’achat n’est pas d’aujourd’hui, touche « Aujourd’hui » pour changer la date.</li>
+      <li>Enregistre.</li>
+    </ol>
+    <p>Un achat avec un ticket de caisse et un ticket de carte reste une seule dépense.</p>
+    <p>Pour corriger une erreur, touche la ligne dans Mouvements.</p>
+  </section>
+
+  <section class="carte">
+    <h3>Comprendre « Il te reste »</h3>
+    <p>C’est ce que tu peux encore dépenser librement, une fois mis de côté tout ce qui est prévu au budget.</p>
+    <p class="guide-exemple">
+      Revenus : 200 000 F<br>
+      Prévu au budget : 150 000 F<br>
+      Déjà dépensé sur ce prévu : 30 000 F<br>
+      <b>Il te reste : 50 000 F</b>
+    </p>
+    <p>Une dépense dans ton prévu ne change donc pas ce chiffre : elle était déjà mise de côté. Il baisse seulement quand tu dépasses une prévision ou que tu dépenses hors budget.</p>
+    <p>Le montant écrit en petit, « Sans les réserver », est l’argent du mois moins ce que tu as vraiment dépensé. C’est lui qui passe au mois suivant : ce que tu n’as pas dépensé n’est pas perdu.</p>
+  </section>
+
+  <section class="carte">
+    <h3>Reconduire une prévision</h3>
+    <p>Quand « Reconduire » est coché, la prévision est recopiée sur le mois suivant. Ce n’est pas une dépense : pense à noter le vrai paiement quand il a lieu.</p>
+  </section>
+
+  <section class="carte" id="sauvegarde">
+    <h3>Sauvegarder : le geste à ne pas oublier</h3>
+    <p>Tes données sont uniquement dans ce téléphone. Aucun serveur n’en garde de copie. <b>Si tu perds ton téléphone sans sauvegarde, elles sont perdues.</b></p>
+    <p><b>Une fois par semaine :</b></p>
+    <ol>
+      <li>Va dans Plus › Sauvegarde et export.</li>
+      <li>Touche « Créer un fichier de sauvegarde ».</li>
+      <li>Sur iPhone, choisis « Enregistrer dans Fichiers », puis iCloud Drive. Sur Android, choisis Google Drive.</li>
+    </ol>
+    <p>Évite de le garder seulement sur le téléphone : il disparaîtrait avec lui. L’app te rappelle de sauvegarder après 7 jours.</p>
+    <p><b>Pour récupérer tes données :</b> installe l’app, va dans Plus › Sauvegarde et export, touche « Choisir un fichier… » et prends ta sauvegarde la plus récente. Tout ce qui se trouve dans l’app est alors remplacé.</p>
+    <p><b>Attention :</b> supprimer l’icône de l’app peut effacer tes données. Sauvegarde avant.</p>
+    <p>Ce fichier contient tous tes chiffres : ne l’envoie à personne.</p>
+  </section>
+
+  <section class="carte">
+    <h3>Tes données restent chez toi</h3>
+    <p>L’app n’a ni compte ni serveur. Ce que tu saisis n’est envoyé nulle part, et personne d’autre ne peut le voir. Elle marche aussi sans réseau.</p>
+  </section>
+</div>
+
+<script src="js/format.js"></script>
+<script src="js/db.js"></script>
+<script src="js/local.js"></script>
+<script src="js/donnees.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/guide.js"></script>

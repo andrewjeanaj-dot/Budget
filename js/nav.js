@@ -1,6 +1,6 @@
 // Pages rangees sous l'onglet « Plus » : elles servent rarement, elles ne
 // meritent pas une place permanente dans la barre du bas.
-const PAGES_PLUS = ['plus', 'categories', 'epargne', 'sauvegarde', 'tendance'];
+const PAGES_PLUS = ['plus', 'categories', 'epargne', 'sauvegarde', 'tendance', 'guide'];
 
 // Le « + » central ouvre la saisie : a la caisse, il doit tomber sous le pouce.
 function injecterNav(actif) {

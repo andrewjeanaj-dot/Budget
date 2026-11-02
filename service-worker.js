@@ -1,14 +1,14 @@
 // A incrementer apres TOUTE modification d'un fichier de l'app, sinon les
 // telephones gardent l'ancienne version en cache.
-const VERSION = 'v10';
+const VERSION = 'v11';
 const CACHE_STATIQUE = `budget-statique-${VERSION}`;
 
 const FICHIERS_A_METTRE_EN_CACHE = [
-  'index.html', 'ajout.html', 'mouvements.html', 'budget.html', 'tendance.html', 'categories.html', 'epargne.html', 'sauvegarde.html', 'plus.html',
+  'index.html', 'ajout.html', 'mouvements.html', 'budget.html', 'tendance.html', 'categories.html', 'epargne.html', 'sauvegarde.html', 'plus.html', 'guide.html',
   'css/style.css',
   'js/format.js', 'js/db.js', 'js/local.js', 'js/donnees.js', 'js/nav.js',
   'js/graphique.js', 'js/saisie.js', 'js/budget.js', 'js/tendance.js', 'js/categories.js',
-  'js/epargne.js', 'js/sauvegarde.js', 'js/plus.js',
+  'js/epargne.js', 'js/sauvegarde.js', 'js/plus.js', 'js/guide.js',
   'js/mouvements.js', 'js/accueil.js', 'js/page-ajout.js', 'js/page-mouvements.js',
   'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
 ];

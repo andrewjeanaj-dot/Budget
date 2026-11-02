@@ -14,10 +14,47 @@ function instantaneVide() {
   };
 }
 
+// Categories proposees a un nouvel utilisateur, sans montant : chacun fixe ses
+// previsions, renomme ou supprime. Celles du quotidien d'abord : ce sont elles
+// qui s'affichent en premier a la caisse.
+const CATEGORIES_STANDARD = [
+  ['courses', 'Courses', 'essentielles'],
+  ['transport', 'Essence et transport', 'essentielles'],
+  ['restaurants', 'Restaurants et snacks', 'loisirs'],
+  ['sorties', 'Sorties et activités', 'loisirs'],
+  ['shopping', 'Shopping et cadeaux', 'loisirs'],
+  ['sante', 'Santé', 'imprevus'],
+  ['logement', 'Logement (loyer ou prêt)', 'essentielles'],
+  ['energie', 'Électricité et eau', 'essentielles'],
+  ['telephone', 'Téléphone et internet', 'essentielles'],
+  ['assurances', 'Assurances', 'essentielles'],
+  ['abonnements', 'Abonnements', 'essentielles'],
+  ['projet', 'Projet perso', 'projet_perso'],
+  ['imprevus', 'Imprévus divers', 'imprevus'],
+];
+
+function instantanePremierLancement() {
+  const snap = instantaneVide();
+  const mois = moisCourant();
+  snap.categories = CATEGORIES_STANDARD.map(([id, libelle, groupe]) => ({ id: `std-${id}`, libelle, groupe, archive: false }));
+  snap.budgets[mois] = {
+    mois, ancre: true, solde_depart: 0,
+    lignes: snap.categories.map((c) => ({ categorie_id: c.id, prevision: 0, reconduire: true })),
+  };
+  return snap;
+}
+
 async function obtenirInstantane() {
   if (_instantane) return _instantane;
-  const enCache = await idbGetSilencieux('cache', CLE_INSTANTANE);
-  _instantane = (enCache && enCache.valeur) || instantaneVide();
+  // Un telephone qui n'a encore rien enregistre recoit les categories standards.
+  // Une lecture en echec ne doit surtout pas passer pour un premier lancement :
+  // la moindre saisie ecraserait alors les vraies donnees avec ces categories.
+  try {
+    const enCache = await idbGet('cache', CLE_INSTANTANE);
+    _instantane = enCache ? (enCache.valeur || instantaneVide()) : instantanePremierLancement();
+  } catch (e) {
+    _instantane = instantaneVide();
+  }
   return _instantane;
 }
 
