@@ -4,6 +4,7 @@ function init() {
   demarrerVerifications();
   document.getElementById('version-app').textContent = `Version de l’app : ${VERSION_APP}`;
   // Une ecriture d'essai, a part des donnees, pour voir l'etat reel du stockage.
+  document.getElementById('etat-stockage').textContent = 'Enregistrement : vérification…';
   obtenirInstantane()
     .then(() => idbPutSilencieux('cache', { cle: 'essai_stockage', valeur: Date.now() }))
     .then((ok) => {

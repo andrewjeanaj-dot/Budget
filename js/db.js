@@ -1,6 +1,6 @@
 const DB_NOM = 'budget-app-db';
 const DB_VERSION = 2;   // v2 : ajout de la file d'attente des modifications
-const DELAI_IDB_MS = 8000;   // un telephone lent ou presque plein peut mettre plusieurs secondes
+const DELAI_IDB_MS = 20000;  // un telephone presque plein peut mettre de longues secondes (constate a plus de 8 s)
 let _dbPromise = null;
 let _idbIndisponible = false;
 let _derniereErreurIdb = '';

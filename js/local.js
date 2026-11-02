@@ -87,6 +87,8 @@ function ecrireMiroir(valeur, ecritLe) {
     localStorage.setItem(CLE_MIROIR, JSON.stringify({ ecrit_le: ecritLe, valeur }));
     return true;
   } catch (e) {
+    // Une copie devenue ancienne ne doit pas etre relue a la place de la bonne.
+    try { localStorage.removeItem(CLE_MIROIR); } catch (e2) { /* sans effet */ }
     return false;
   }
 }
@@ -111,58 +113,169 @@ function dejaUtilisee() {
   }
 }
 
-async function obtenirInstantane() {
-  if (_instantane) return _instantane;
-  const secours = [lireMiroir(), await lireCacheDonnees()].filter((c) => c && c.valeur)
-    .sort((a, b) => (b.ecrit_le || 0) - (a.ecrit_le || 0))[0];
+// IndexedDB peut mettre de longues secondes a repondre, surtout sur un telephone
+// presque plein. L'ecran n'attend donc jamais : la copie rapide (localStorage) est
+// lue et ecrite en premier, les deux autres stockages suivent en arriere-plan.
+const PATIENCE_NOUVEL_UTILISATEUR_MS = 1500;
+const PATIENCE_ANCIEN_UTILISATEUR_MS = 20000;
+let _ecritLe = 0;             // date de la version affichee
+let _lectureEnCours = null;
+let _verification = null;
+let _aEcrire = null;          // derniere version a ecrire, les intermediaires sont sautees
+let _boucleEcriture = null;
+let _dernierResultat = { principal: true, cache: true };
+
+function lancerEcritures() {
+  if (!_boucleEcriture) {
+    _boucleEcriture = (async () => {
+      while (_aEcrire) {
+        const { snap, ecritLe } = _aEcrire;
+        _aEcrire = null;
+        const [principal, cache] = await Promise.all([
+          idbPutSilencieux('cache', { cle: CLE_INSTANTANE, valeur: snap, ecrit_le: ecritLe }),
+          ecrireCacheDonnees(snap, ecritLe),
+        ]);
+        _dernierResultat = { principal, cache };
+        _secoursActif = !principal;
+      }
+      _boucleEcriture = null;
+      return _dernierResultat;
+    })();
+  }
+  return _boucleEcriture;
+}
+
+// Attend la fin du travail en arriere-plan.
+async function attendreEcritures() {
+  if (_verification) await _verification;
+  if (_boucleEcriture) await _boucleEcriture;
+}
+
+function adopterVersion(valeur, ecritLe) {
+  _instantane = valeur;
+  _ecritLe = ecritLe;
+  _lectureEnEchec = false;
+  _stockageEnEchec = false;
+  window.dispatchEvent(new CustomEvent('donnees-modifiees', { detail: { type: 'relecture' } }));
+}
+
+// Compare au stockage principal, sans faire attendre l'ecran : il recoit la version
+// la plus recente, ou la donne s'il est le seul a l'avoir.
+function verifierPrincipal() {
+  _verification = (async () => {
+    try {
+      const copieCache = await lireCacheDonnees();
+      if (copieCache && copieCache.valeur && copieCache.ecrit_le > _ecritLe) adopterVersion(copieCache.valeur, copieCache.ecrit_le);
+      const enCache = await lireStockagePrincipal();
+      const date = enCache ? (enCache.ecrit_le || 0) : -1;
+      if (enCache && enCache.valeur && date > _ecritLe) {
+        adopterVersion(enCache.valeur, date);
+      } else if (date < _ecritLe && !_aEcrire && _instantane) {
+        _aEcrire = { snap: _instantane, ecritLe: _ecritLe };
+        lancerEcritures();
+      }
+    } catch (e) {
+      noterErreurIdb(e);
+    }
+    _verification = null;
+  })();
+}
+
+function apresDelai(ms, valeur) {
+  return new Promise((resolve) => setTimeout(() => resolve(valeur), ms));
+}
+
+async function chargerInstantane() {
+  // Une copie rapide : l'ecran s'affiche tout de suite.
+  const miroir = lireMiroir();
+  if (miroir && miroir.valeur) {
+    _instantane = miroir.valeur;
+    _ecritLe = miroir.ecrit_le || 0;
+    verifierPrincipal();
+    return _instantane;
+  }
+  const copieCache = await Promise.race([lireCacheDonnees(), apresDelai(1000, null)]);
+  if (copieCache && copieCache.valeur) {
+    _instantane = copieCache.valeur;
+    _ecritLe = copieCache.ecrit_le || 0;
+    verifierPrincipal();
+    return _instantane;
+  }
+
   // Un telephone qui n'a encore rien enregistre recoit les categories standards.
   // Une lecture en echec chez quelqu'un qui a deja des donnees ne doit surtout pas
   // passer pour un premier lancement : une saisie les ecraserait.
-  try {
-    const enCache = await lireStockagePrincipal();
-    _lectureEnEchec = false;
-    if (secours && (!enCache || secours.ecrit_le > (enCache.ecrit_le || 0))) {
-      _instantane = secours.valeur;   // le principal avait refuse la derniere ecriture
-    } else {
-      _instantane = enCache ? (enCache.valeur || instantaneVide()) : instantanePremierLancement();
-      // Donnees d'avant les copies de secours : on les protege des maintenant.
-      if (enCache && enCache.valeur && !secours) {
-        ecrireMiroir(enCache.valeur, enCache.ecrit_le || 0);
-        ecrireCacheDonnees(enCache.valeur, enCache.ecrit_le || 0);
-      }
-    }
-  } catch (e) {
+  const ancien = dejaUtilisee();
+  const lecture = lireStockagePrincipal();
+  const resultat = await Promise.race([
+    lecture.then((enCache) => ({ lu: true, enCache })),
+    apresDelai(ancien ? PATIENCE_ANCIEN_UTILISATEUR_MS : PATIENCE_NOUVEL_UTILISATEUR_MS, { lu: false, delai: true }),
+  ]).catch((e) => {
     noterErreurIdb(e);
-    if (secours) {
-      _instantane = secours.valeur;
-    } else if (dejaUtilisee()) {
-      _lectureEnEchec = true;
-      _instantane = instantaneVide();
-    } else {
-      _instantane = instantanePremierLancement();
+    return { lu: false, delai: false };
+  });
+
+  if (resultat.lu) {
+    _lectureEnEchec = false;
+    const enCache = resultat.enCache;
+    _instantane = enCache ? (enCache.valeur || instantaneVide()) : instantanePremierLancement();
+    _ecritLe = enCache ? (enCache.ecrit_le || 0) : 0;
+    // Donnees d'avant les copies de secours : on les protege des maintenant.
+    if (enCache && enCache.valeur) {
+      ecrireMiroir(enCache.valeur, _ecritLe);
+      ecrireCacheDonnees(enCache.valeur, _ecritLe);
     }
+    return _instantane;
+  }
+
+  if (ancien) {
+    _lectureEnEchec = true;
+    _instantane = instantaneVide();
+  } else {
+    _instantane = instantanePremierLancement();
+  }
+  // Le stockage etait seulement lent : sa reponse est prise en compte a son arrivee.
+  if (resultat.delai) {
+    noterErreurIdb({ name: 'Lenteur', message: 'le stockage principal met trop de temps à répondre' });
+    lecture.then((enCache) => {
+      if (_ecritLe !== 0) return;   // une saisie a deja eu lieu, elle est plus recente
+      if (enCache && enCache.valeur) adopterVersion(enCache.valeur, enCache.ecrit_le || 0);
+      else if (_lectureEnEchec) adopterVersion(instantanePremierLancement(), 0);
+    }).catch(noterErreurIdb);
   }
   return _instantane;
 }
 
-// Ecrit l'instantane partout ou le telephone l'accepte. Renvoie false si rien n'a
-// pu etre ecrit : l'appelant doit le signaler. Sans lecture fiable, on n'ecrit
-// rien : une app affichee vide ne doit jamais remplacer les vraies donnees.
+async function obtenirInstantane() {
+  if (_instantane) return _instantane;
+  if (!_lectureEnCours) {
+    _lectureEnCours = chargerInstantane().finally(() => { _lectureEnCours = null; });
+  }
+  return _lectureEnCours;
+}
+
+// Ecrit l'instantane. Renvoie false si rien n'a pu etre ecrit : l'appelant doit le
+// signaler. Sans lecture fiable, on n'ecrit rien : une app affichee vide ne doit
+// jamais remplacer les vraies donnees.
 async function definirInstantane(snap) {
   _instantane = snap;
   if (_lectureEnEchec) {
     _stockageEnEchec = true;
     return false;
   }
-  const ecritLe = Date.now();
-  const [okPrincipal, okCache] = await Promise.all([
-    idbPutSilencieux('cache', { cle: CLE_INSTANTANE, valeur: snap, ecrit_le: ecritLe }),
-    ecrireCacheDonnees(snap, ecritLe),
-  ]);
-  const okSecours = ecrireMiroir(snap, ecritLe) || okCache;
-  const ok = okPrincipal || okSecours;
+  const ecritLe = Math.max(Date.now(), _ecritLe + 1);
+  _ecritLe = ecritLe;
+  const okRapide = ecrireMiroir(snap, ecritLe);
+  _aEcrire = { snap, ecritLe };
+  const ecritures = lancerEcritures();
+  let ok = okRapide;
+  if (!okRapide) {
+    // La copie rapide a echoue : on attend une autre preuve, le cache d'abord car
+    // IndexedDB peut etre tres lent.
+    ok = await ecrireCacheDonnees(snap, ecritLe);
+    if (!ok) ok = (await ecritures).principal;
+  }
   _stockageEnEchec = !ok;
-  _secoursActif = !okPrincipal && okSecours;
   if (ok && typeof signalerChangementCoffre === 'function') signalerChangementCoffre();
   return ok;
 }
