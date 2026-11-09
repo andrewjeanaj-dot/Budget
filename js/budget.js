@@ -93,12 +93,21 @@ function afficherRevenus(d) {
     const ligne = document.createElement('div');
     ligne.className = 'ligne-liste';
     ligne.innerHTML = `
-      <span>${escapeHtml(r.libelle)} <span style="color:var(--texte-att)">(${escapeHtml(r.type)})</span></span>
+      <span>${escapeHtml(r.libelle)} <span style="color:var(--texte-att)">(${r.auto ? 'repris automatiquement' : escapeHtml(r.type)})</span>
+        <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--texte-att); margin-top:4px">
+          <input type="checkbox" data-action="reconduire-revenu" ${r.reconduire ? 'checked' : ''}> Reconduire chaque mois
+        </label>
+      </span>
       <span class="actions">
         <strong>${formatXPF(r.montant)}</strong>
         <button class="icone-action">✕</button>
       </span>`;
     ligne.querySelector('button').addEventListener('click', () => supprimerRevenu(r.id));
+    ligne.querySelector('[data-action="reconduire-revenu"]').addEventListener('change', async (e) => {
+      await enfilerOperation('revenu.modifier', { id: r.id, mois: moisAffiche, reconduire: e.target.checked });
+      afficherToast(e.target.checked ? 'Ce revenu reviendra chaque mois' : 'Reprise arrêtée à partir du mois suivant');
+      charger();
+    });
     liste.appendChild(ligne);
   }
 }

@@ -37,8 +37,10 @@ function monterSaisie(racine) {
   const caseMoisSuivant = el('input', { type: 'checkbox', id: 'mois-suivant' });
   const texteMoisSuivant = el('span', { id: 'texte-mois-suivant' });
   const ligneMoisSuivant = el('label', { class: 'case-mois-suivant', id: 'ligne-mois-suivant', hidden: true }, caseMoisSuivant, texteMoisSuivant);
+  const caseReconduire = el('input', { type: 'checkbox', id: 'revenu-reconduire' });
+  const ligneReconduire = el('label', { class: 'case-mois-suivant', id: 'ligne-revenu-reconduire' }, caseReconduire, el('span', {}, 'Reconduire chaque mois (le montant revient tout seul le mois suivant)'));
   const blocRevenu = el('div', { id: 'bloc-revenu', hidden: true },
-    el('span', { class: 'etiquette-champ', style: { marginTop: '6px' } }, 'Type de revenu'), choixRevenu, ligneMoisSuivant);
+    el('span', { class: 'etiquette-champ', style: { marginTop: '6px' } }, 'Type de revenu'), choixRevenu, ligneMoisSuivant, ligneReconduire);
 
   const boutonDate = el('button', { class: 'puce-option', id: 'bouton-date', type: 'button' }, '📅 Aujourd’hui');
   const boutonNote = el('button', { class: 'puce-option', id: 'bouton-toggle-note', type: 'button' }, '✎ Ajouter une note');
@@ -152,6 +154,7 @@ function monterSaisie(racine) {
     choixRevenu.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.libelle === libelle)));
     // Un salaire verse en fin de mois finance le mois suivant : coche par defaut.
     caseMoisSuivant.checked = libelle === 'Salaire';
+    caseReconduire.checked = libelle === 'Salaire';
     majMoisSuivant();
     champMontant.blur();
     majBouton();
@@ -217,6 +220,7 @@ function monterSaisie(racine) {
     etat.categorie = null;
     etat.libelleRevenu = null;
     caseMoisSuivant.checked = false;
+    caseReconduire.checked = false;
     racine.querySelectorAll('.bouton-categorie.selectionne').forEach((b) => b.classList.remove('selectionne'));
     choixRevenu.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', 'false'));
     majLibelleDate();
@@ -243,11 +247,11 @@ function monterSaisie(racine) {
       annuler = () => supprimerDepense(res.depense.id, moisVise);
     } else {
       const type = (LIBELLES_REVENU.find((r) => r.libelle === etat.libelleRevenu) || {}).type;
-      const res = await enregistrerRevenu({ montant, libelle: etat.libelleRevenu, type, note, date, mois: moisDuRevenu() });
+      const res = await enregistrerRevenu({ montant, libelle: etat.libelleRevenu, type, note, date, mois: moisDuRevenu(), reconduire: caseReconduire.checked });
       if (!res.enLocal) { boutonEnregistrer.disabled = false; return; }
       message = 'Revenu enregistré ✓';
       moisVise = res.revenu.mois;
-      annuler = () => enfilerOperation('revenu.supprimer', { id: res.revenu.id, mois: res.revenu.mois });
+      annuler = () => enfilerOperation('revenu.supprimer', { id: res.revenu.id, mois: res.revenu.mois, annulation: true });
     }
     if (moisVise !== moisCourant()) message += ` (${moisLabel(moisVise).toLowerCase()})`;
     afficherToast(message, { libelle: 'Annuler', faire: async () => { await annuler(); afficherToast('Saisie annulée'); } });

@@ -56,7 +56,7 @@ async function restaurerDepense(id) {
 }
 
 // mois : le mois que le revenu finance (par defaut celui de sa date).
-async function enregistrerRevenu({ montant, libelle, type, note, date, mois, moyen }) {
+async function enregistrerRevenu({ montant, libelle, type, note, date, mois, moyen, reconduire }) {
   const d = date || dateAujourdhui();
   const revenu = {
     id: genererUuid(),
@@ -67,6 +67,7 @@ async function enregistrerRevenu({ montant, libelle, type, note, date, mois, moy
     date: d,
     note: note || '',
     moyen: moyen || 'virement',
+    reconduire: !!reconduire,
     cree_le: nowIso(),
   };
   const { ok } = await enfilerOperation('revenu.ajouter', revenu);
@@ -92,7 +93,7 @@ function mouvementsDuMois(snap, mois) {
     liste.push({
       sorte: 'revenu', id: r.id, date: r.date || `${mois}-01`, sansDate: !r.date, mois,
       montant: r.montant, note: r.note || '', moyen: r.moyen || null, cree_le: r.cree_le || '',
-      titre: r.libelle, icone: info ? info.icone : '💰', brut: r,
+      titre: r.libelle, icone: info ? info.icone : '💰', brut: r, auto: !!r.auto,
     });
   }
   return liste.sort((a, b) => b.date.localeCompare(a.date) || b.cree_le.localeCompare(a.cree_le));

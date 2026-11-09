@@ -58,7 +58,11 @@ async function exporterCsv() {
   const snap = await obtenirInstantane();
   const lignes = [];
   for (const mois of Object.keys({ ...snap.depenses, ...snap.revenus }).sort()) {
-    for (const m of mouvementsDuMois(snap, mois)) lignes.push({ ...m, moisBudget: mois });
+    for (const m of mouvementsDuMois(snap, mois)) {
+      // Une copie automatique d'un mois a venir n'est pas encore un vrai mouvement.
+      if (m.auto && mois > moisCourant()) continue;
+      lignes.push({ ...m, moisBudget: mois });
+    }
   }
   if (lignes.length === 0) { afficherToast('Aucun mouvement à exporter'); return; }
   lignes.sort((a, b) => a.date.localeCompare(b.date) || a.cree_le.localeCompare(b.cree_le));

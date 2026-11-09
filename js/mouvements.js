@@ -90,7 +90,7 @@ function monterMouvements(racine, lireMois) {
     const date = el('input', { class: 'champ', id: 'edit-date', type: 'date', value: m.sansDate ? '' : m.date });
     const note = el('input', { class: 'champ', id: 'edit-note', maxlength: '120', value: m.note, placeholder: 'Note (optionnel)' });
 
-    let categorie, moyen, libelle, moisRevenu;
+    let categorie, moyen, libelle, moisRevenu, caseReconduire;
     const champs = [champ('Montant (F)', montant)];
     if (estDepense) {
       const cats = (snap.categories || []).filter((c) => !c.archive || c.id === m.categorie_id);
@@ -114,6 +114,9 @@ function monterMouvements(racine, lireMois) {
       moisRevenu.value = m.mois;
       date.addEventListener('change', () => optionsMoisRevenu(moisRevenu, date.value, m.mois));
       champs.push(champ('Type de revenu', libelle), champ('Date d’arrivée', date), champ('Compté dans le budget de', moisRevenu));
+      caseReconduire = el('input', { type: 'checkbox', id: 'edit-reconduire' });
+      caseReconduire.checked = !!m.brut.reconduire;
+      champs.push(el('label', { class: 'case-mois-suivant' }, caseReconduire, el('span', {}, 'Reconduire chaque mois (décocher arrête la reprise à partir du mois suivant)')));
     }
     champs.push(champ('Note', note));
 
@@ -145,8 +148,9 @@ function monterMouvements(racine, lireMois) {
         await enfilerOperation('depense.modifier', apres);
       } else {
         const type = (LIBELLES_REVENU.find((x) => x.libelle === libelle.value) || {}).type || m.brut.type || 'variable';
-        avant = { id: m.id, mois: moisRevenu.value, nouveau_mois: m.mois, montant: m.montant, libelle: m.titre, type: m.brut.type, date: m.sansDate ? null : m.date, note: m.note };
-        apres = { id: m.id, mois: m.mois, nouveau_mois: moisRevenu.value, montant: nouveauMontant, libelle: libelle.value, type, date: date.value || null, note: note.value.trim() };
+        const resteAuto = m.auto && nouveauMontant === m.montant && libelle.value === m.titre;
+        avant = { id: m.id, mois: moisRevenu.value, nouveau_mois: m.mois, montant: m.montant, libelle: m.titre, type: m.brut.type, date: m.sansDate ? null : m.date, note: m.note, reconduire: !!m.brut.reconduire, auto: m.auto };
+        apres = { id: m.id, mois: m.mois, nouveau_mois: moisRevenu.value, montant: nouveauMontant, libelle: libelle.value, type, date: date.value || null, note: note.value.trim(), reconduire: caseReconduire.checked, auto: resteAuto };
         await enfilerOperation('revenu.modifier', apres);
       }
       fermer();
@@ -163,6 +167,7 @@ function monterMouvements(racine, lireMois) {
     if (m.sorte === 'revenu' && m.date.slice(0, 7) !== mois) {
       details.push(`versé le ${dateCourte(m.date)}, compté pour ${moisLabel(mois).toLowerCase()}`);
     }
+    if (m.auto) details.push('repris automatiquement');
     if (m.note) details.push(m.note);
     const signe = m.sorte === 'depense' ? '−' : '+';
     // Toute la ligne ouvre la fiche de modification (sauf la croix).
@@ -182,7 +187,7 @@ function monterMouvements(racine, lireMois) {
           : null),
       el('div', { class: 'mvt-droite' },
         el('div', { class: 'mvt-montant ' + (m.sorte === 'depense' ? 'neg' : 'pos') }, signe + formatXPF(m.montant)),
-        el('div', { class: 'mvt-date' }, m.sansDate ? 'sans date' : dateCourte(m.date))),
+        el('div', { class: 'mvt-date' }, m.sansDate && !m.auto ? 'sans date' : dateCourte(m.date))),
       el('button', {
         type: 'button', class: 'mvt-suppr', title: 'Supprimer',
         'aria-label': `Supprimer ${m.titre} ${signe}${formatXPF(m.montant)}`,

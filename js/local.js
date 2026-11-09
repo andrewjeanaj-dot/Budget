@@ -466,19 +466,92 @@ function budgetVide(mois) {
   return { mois, ancre: false, solde_depart: 0, lignes: [] };
 }
 
+// ─── Reconduction d'un mois sur l'autre ────────────────────────────────────
+//
+// Regle de protection des donnees : le mois en cours et les mois passes ne
+// sont jamais recalcules. Seuls les mois a venir suivent le mois d'avant, et
+// seulement pour ce qui a ete repris automatiquement.
+
+// Previsions : les lignes cochees du mois source sont recopiees. Une ligne
+// decochee depuis disparait du mois cible (sauf saisie manuelle).
+function recopierPrevisions(source, cible) {
+  const aReprendre = new Map(source.lignes.filter((l) => l.reconduire).map((l) => [l.categorie_id, l]));
+  cible.lignes = cible.lignes.filter((l) => !l.reconduire || l.manuel || aReprendre.has(l.categorie_id));
+  for (const [categorieId, s] of aReprendre) {
+    const t = cible.lignes.find((l) => l.categorie_id === categorieId);
+    if (!t) cible.lignes.push({ categorie_id: categorieId, prevision: s.prevision, reconduire: true });
+    else if (t.reconduire && !t.manuel) t.prevision = s.prevision;
+  }
+}
+
+// Revenus : une « serie » relie un revenu coche a ses copies des mois suivants.
+// Un revenu saisi a la main sous le meme nom n'est jamais ajoute une 2e fois.
+function recopierRevenus(snap, moisSource, moisCible) {
+  const sources = (snap.revenus[moisSource] || []).filter((r) => r.reconduire);
+  const series = new Set(sources.map((r) => r.serie || r.id));
+  const retires = snap.budgets[moisCible].revenus_retires || [];
+  const cible = (snap.revenus[moisCible] || []).filter((r) => !r.auto || series.has(r.serie));
+  for (const s of sources) {
+    const serie = s.serie || s.id;
+    if (retires.includes(serie)) continue;
+    const copie = cible.find((r) => r.serie === serie);
+    if (copie) {
+      if (copie.auto) { copie.montant = s.montant; copie.libelle = s.libelle; copie.type = s.type; }
+      continue;
+    }
+    const manuel = cible.find((r) => !r.auto && r.libelle === s.libelle);
+    if (manuel) {
+      manuel.serie = serie;
+      if (manuel.reconduire === undefined) manuel.reconduire = true;
+      continue;
+    }
+    cible.push({ id: genererUuid(), libelle: s.libelle, montant: s.montant, type: s.type,
+                 reconduire: true, auto: true, serie });
+  }
+  if (cible.length > 0 || snap.revenus[moisCible]) snap.revenus[moisCible] = cible;
+}
+
+function propagerReconductions(snap) {
+  const actuel = moisCourant();
+  for (const mois of Object.keys(snap.budgets).filter((m) => m > actuel).sort()) {
+    const moisSource = moisPrecedentDe(mois);
+    if (!snap.budgets[moisSource]) continue;
+    recopierPrevisions(snap.budgets[moisSource], snap.budgets[mois]);
+    recopierRevenus(snap, moisSource, mois);
+  }
+}
+
+// avecRevenus : faux pour un trou entre deux mois existants, sinon on
+// inventerait de l'argent dans le passe et les reports changeraient.
+function creerMois(snap, mois, avecRevenus) {
+  const moisSource = moisPrecedentDe(mois);
+  const prec = snap.budgets[moisSource];
+  const calcPrec = prec ? calculerMois(snap, moisSource) : null;
+  const budget = { mois, ancre: false, solde_depart: calcPrec ? calcPrec.solde_a_reporter : 0, lignes: [] };
+  snap.budgets[mois] = budget;
+  if (!prec) return;
+  recopierPrevisions(prec, budget);
+  if (avecRevenus) recopierRevenus(snap, moisSource, mois);
+}
+
+// Cree le mois et, s'il en manque, ceux qui le precedent : la reprise ne doit
+// pas s'arreter parce qu'un mois n'a jamais ete ouvert.
 function assurerMois(snap, mois) {
-  if (snap.budgets[mois]) return;
-  const prec = snap.budgets[moisPrecedentDe(mois)];
-  const lignes = prec
-    ? prec.lignes.filter((l) => l.reconduire)
-        .map((l) => ({ categorie_id: l.categorie_id, prevision: l.prevision, reconduire: true }))
-    : [];
-  const calcPrec = prec ? calculerMois(snap, moisPrecedentDe(mois)) : null;
-  snap.budgets[mois] = {
-    mois, ancre: false,
-    solde_depart: calcPrec ? calcPrec.solde_a_reporter : 0,
-    lignes,
-  };
+  if (!snap.budgets[mois]) {
+    const existants = Object.keys(snap.budgets).sort();
+    const avant = existants.filter((m) => m < mois);
+    if (avant.length === 0) {
+      creerMois(snap, mois, false);
+    } else {
+      const dernier = existants[existants.length - 1];
+      let m = avant[avant.length - 1];
+      while (m < mois) {
+        m = moisSuivant(m);
+        creerMois(snap, m, m > dernier);
+      }
+    }
+  }
+  propagerReconductions(snap);
 }
 
 
@@ -513,9 +586,12 @@ function appliquerLocalement(snap, type, p) {
       assurerMois(snap, p.mois);
       const b = snap.budgets[p.mois];
       const l = b.lignes.find((x) => x.categorie_id === p.categorie_id);
-      if (l) { l.prevision = p.prevision; l.reconduire = !!p.reconduire; }
-      else b.lignes.push({ categorie_id: p.categorie_id, prevision: p.prevision,
-                            reconduire: !!p.reconduire });
+      const ligne = l || { categorie_id: p.categorie_id };
+      ligne.prevision = p.prevision;
+      ligne.reconduire = !!p.reconduire;
+      // Un montant choisi pour un mois a venir ne doit pas etre ecrase.
+      if (p.mois > moisCourant()) ligne.manuel = true;
+      if (!l) b.lignes.push(ligne);
       break;
     }
 
@@ -569,6 +645,13 @@ function appliquerLocalement(snap, type, p) {
           else r[champ] = p[champ];
         }
       }
+      if ('reconduire' in p) r.reconduire = !!p.reconduire;
+      // Un montant corrige n'est plus une copie automatique : il reste tel
+      // quel, et le mois suivant reprend ce nouveau montant.
+      if ('auto' in p) {
+        if (p.auto) r.auto = true;
+        else delete r.auto;
+      }
       const cible = p.nouveau_mois || p.mois;
       if (cible !== p.mois) {
         snap.revenus[p.mois] = liste.filter((x) => x.id !== p.id);
@@ -593,20 +676,35 @@ function appliquerLocalement(snap, type, p) {
     case 'revenu.ajouter':
       if (!snap.revenus[p.mois]) snap.revenus[p.mois] = [];
       if (!snap.revenus[p.mois].some((r) => r.id === p.id)) {
+        // Le vrai salaire saisi a la main remplace sa copie automatique.
+        if (!p.auto) {
+          snap.revenus[p.mois] = snap.revenus[p.mois].filter((r) => !(r.auto && r.libelle === p.libelle));
+        }
         const r = { id: p.id, libelle: p.libelle, montant: p.montant, type: p.type };
-        for (const champ of ['date', 'note', 'moyen', 'cree_le']) {
+        for (const champ of ['date', 'note', 'moyen', 'cree_le', 'reconduire', 'auto', 'serie']) {
           if (p[champ]) r[champ] = p[champ];
         }
         snap.revenus[p.mois].push(r);
+        const bRevenu = snap.budgets[p.mois];
+        if (p.serie && bRevenu && bRevenu.revenus_retires) {
+          bRevenu.revenus_retires = bRevenu.revenus_retires.filter((s) => s !== p.serie);
+        }
       }
       assurerMois(snap, p.mois);
       break;
 
-    case 'revenu.supprimer':
-      if (snap.revenus[p.mois]) {
-        snap.revenus[p.mois] = snap.revenus[p.mois].filter((r) => r.id !== p.id);
+    case 'revenu.supprimer': {
+      const liste = snap.revenus[p.mois];
+      if (!liste) break;
+      const r = liste.find((x) => x.id === p.id);
+      // Retenu pour que la copie supprimee ne revienne pas toute seule.
+      const b = snap.budgets[p.mois];
+      if (r && r.serie && b && !p.annulation) {
+        b.revenus_retires = [...new Set([...(b.revenus_retires || []), r.serie])];
       }
+      snap.revenus[p.mois] = liste.filter((x) => x.id !== p.id);
       break;
+    }
 
     case 'objectif.creer':
       if (!snap.epargne.objectifs.some((o) => o.id === p.id)) {
@@ -651,6 +749,7 @@ function appliquerLocalement(snap, type, p) {
     default:
       break;
   }
+  propagerReconductions(snap);
   return snap;
 }
 
