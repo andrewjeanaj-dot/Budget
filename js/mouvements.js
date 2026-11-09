@@ -143,7 +143,7 @@ function monterMouvements(racine, lireMois) {
       let avant;
       let apres;
       if (estDepense) {
-        avant = { id: m.id, montant: m.montant, categorie_id: m.categorie_id, date: m.date, note: m.note, moyen: m.moyen || null };
+        avant = { id: m.id, montant: m.montant, categorie_id: m.categorie_id, date: m.date, note: m.note, moyen: m.moyen || null, retour_auto: m.auto };
         apres = { id: m.id, montant: nouveauMontant, categorie_id: categorie.value, date: date.value, note: note.value.trim(), moyen: moyen.value || null, modifie_le: nowIso() };
         await enfilerOperation('depense.modifier', apres);
       } else {
@@ -198,6 +198,8 @@ function monterMouvements(racine, lireMois) {
   async function rendre() {
     const mois = lireMois();
     const snap = await obtenirInstantane();
+    // Sans cela, un mois jamais ouvert ailleurs paraitrait vide ici.
+    assurerMois(snap, mois);
     remplirFiltre(snap.categories || []);
     sous.textContent = moisLabel(mois);
     const tous = mouvementsDuMois(snap, mois).filter(garder);

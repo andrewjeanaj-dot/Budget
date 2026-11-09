@@ -39,6 +39,7 @@ function afficherCartePrincipale(d) {
   const reste = d.total_prevu - d.total_reel;
   const depasse = reste < 0;
   carte.classList.toggle('depasse', depasse);
+  carte.classList.toggle('positif', d.total_prevu > 0 && reste > 0);
 
   const etiquette = document.getElementById('h-etiquette');
   const chiffre = document.getElementById('h-reste');
@@ -146,7 +147,7 @@ function afficherGroupes(d) {
         </div>
         <div class="chiffres">
           <div>${formatXPF(l.reel)} / ${formatXPF(l.prevision)}</div>
-          <div class="reste ${l.reste < 0 ? 'negatif' : ''}">${texteReste(l)}</div>
+          <div class="reste ${l.reste < 0 ? 'negatif' : l.reste > 0 ? 'positif' : ''}">${texteReste(l)}</div>
         </div>`;
       carte.appendChild(div);
     }

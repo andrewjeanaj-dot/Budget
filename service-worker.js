@@ -1,6 +1,6 @@
 // A incrementer apres TOUTE modification d'un fichier de l'app, sinon les
 // telephones gardent l'ancienne version en cache.
-const VERSION = 'v24';
+const VERSION = 'v25';
 const CACHE_STATIQUE = `budget-statique-${VERSION}`;
 
 const FICHIERS_A_METTRE_EN_CACHE = [

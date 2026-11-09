@@ -163,7 +163,7 @@ async function supprimerCategorie(c) {
   // Verification faite localement : faite dans le telephone.
   const snap = await obtenirInstantane();
   const utilisee = Object.values(snap.depenses)
-    .some((liste) => liste.some((d) => d.categorie_id === c.id && !d.supprime));
+    .some((liste) => liste.some((d) => d.categorie_id === c.id && !d.supprime && !d.auto));
 
   if (utilisee) {
     if (!confirm(`« ${c.libelle} » a déjà des dépenses enregistrées : suppression impossible.\nL’archiver à la place (elle disparaît des listes mais l’historique est conservé) ?`)) {

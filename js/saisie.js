@@ -85,7 +85,7 @@ function monterSaisie(racine) {
     const usage = {};
     for (const liste of Object.values(snap.depenses || {})) {
       for (const d of liste) {
-        if (!d.supprime && d.date >= limite) usage[d.categorie_id] = (usage[d.categorie_id] || 0) + 1;
+        if (!d.supprime && !d.auto && d.date >= limite) usage[d.categorie_id] = (usage[d.categorie_id] || 0) + 1;
       }
     }
     return categories

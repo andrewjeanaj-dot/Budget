@@ -70,6 +70,7 @@ function rendreChiffres(calc, snap) {
   const reste = calc.solde_a_reporter;
   document.getElementById('k-reste').textContent = signe(reste);
   document.getElementById('k-heros').classList.toggle('negatif', reste < 0);
+  document.getElementById('k-heros').classList.toggle('positif', reste > 0);
   const sous = document.getElementById('k-reste-sous');
   if (!calc.total_revenus && !calc.total_reel && !calc.solde_depart && !encorePrevu) sous.textContent = 'Rien de saisi pour ce mois';
   else if (moisClos || encorePrevu === 0) sous.textContent = 'Argent du mois moins les dépenses';
@@ -235,7 +236,7 @@ function rendreBudgets(calc, parId) {
         el('span', { class: 'bud-chiffres' }, el('b', {}, formatXPF(l.reel)), ' / ' + formatXPF(l.prevision))),
       el('div', { class: 'bud-piste', role: 'progressbar', 'aria-label': `Budget ${l.cat ? l.cat.libelle : ''}`, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': Math.round(pct) },
         el('div', { class: 'bud-rempli', style: { width: pct + '%' } })),
-      el('div', { class: 'bud-note' }, note));
+      el('div', { class: 'bud-note' + (l.prevision > l.reel ? ' positif' : '') }, note));
   })));
 }
 

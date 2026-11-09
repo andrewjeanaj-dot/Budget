@@ -446,6 +446,7 @@ body.avec-barre-action .toast { bottom: calc(150px + env(safe-area-inset-bottom)
 }
 .carte-principale.depasse .grand-chiffre,
 .carte-principale.depasse .etiquette { color: var(--rouge); }
+.carte-principale.positif .grand-chiffre { color: var(--vert); }
 .carte-principale .sous-texte { font-size: 0.85rem; color: var(--texte-att); margin-top: 6px; }
 .carte-principale .barre-progression { height: 8px; border-radius: 4px; margin: 12px 0 4px; }
 .carte-principale .report {
@@ -482,6 +483,7 @@ body.avec-barre-action .toast { bottom: calc(150px + env(safe-area-inset-bottom)
 .ligne-budget .chiffres { text-align: right; font-size: 0.85rem; color: var(--texte-att); white-space: nowrap; }
 .ligne-budget .reste { font-weight: 700; font-size: 0.92rem; color: var(--texte); }
 .ligne-budget .reste.negatif { color: var(--rouge); }
+.ligne-budget .reste.positif { color: var(--vert); }
 
 .barre-progression {
   height: 6px;
@@ -668,6 +670,7 @@ body.avec-barre-action .toast { bottom: calc(150px + env(safe-area-inset-bottom)
 .chiffre-cle.heros .sous { color: rgba(26, 13, 2, 0.75); }
 .chiffre-cle.heros .valeur { font-size: clamp(1.9rem, 15cqi, 3.1rem); letter-spacing: 0; word-spacing: 0.2em; line-height: 1.1; }
 .chiffre-cle.heros.negatif { background: linear-gradient(140deg, #f26168, #d8383f); }
+.chiffre-cle.heros.positif { background: linear-gradient(140deg, #5fe09a, #2fbf73); }
 @container (max-width: 640px) {
   .chiffres-cles { grid-template-columns: 1fr 1fr; }
   .chiffre-cle.heros { grid-column: 1 / -1; }
@@ -737,6 +740,7 @@ body.avec-barre-action .toast { bottom: calc(150px + env(safe-area-inset-bottom)
 .bud-rempli { height: 100%; border-radius: 999px; background: var(--accent); }
 .bud.depasse .bud-rempli { background: var(--rouge-fort); }
 .bud-note { font-size: 0.76rem; color: var(--texte-att); margin-top: 5px; }
+.bud-note.positif { color: var(--vert); }
 .bud.depasse .bud-note { color: #ff8a80; font-weight: 550; }
 
 /* ── Mouvements ───────────────────────────────────────────── */

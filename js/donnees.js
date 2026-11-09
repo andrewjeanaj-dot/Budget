@@ -85,7 +85,7 @@ function mouvementsDuMois(snap, mois) {
     liste.push({
       sorte: 'depense', id: d.id, date: d.date, montant: d.montant, note: d.note || '',
       moyen: d.moyen || null, cree_le: d.cree_le || '', categorie_id: d.categorie_id,
-      titre: c ? c.libelle : 'Catégorie supprimée', icone: c ? iconeCategorie(c) : '❔',
+      titre: c ? c.libelle : 'Catégorie supprimée', icone: c ? iconeCategorie(c) : '❔', auto: !!d.auto,
     });
   }
   for (const r of (snap.revenus[mois] || [])) {
